@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE struts-config 
+    PUBLIC "-//Apache Software Foundation//DTD Struts Configuration 1.2//EN" 
+    "http://struts.apache.org/dtds/struts-config_1_2.dtd">
+
+<struts-config>
+
+	<form-beans>
+		<form-bean name="baseForm"
+			type="com.hatc.base.web.form.BaseForm">
+			<form-property name="id" type="java.lang.String[]" />
+			<form-property name="file"
+				type="org.apache.struts.upload.FormFile" />
+		</form-bean>
+	</form-beans>
+
+	<global-forwards>
+		<!--<forward name="index" path="/index.jsp" />-->
+		<forward name="index" path="/login.jsp" />
+		<forward name="login" path="/login.jsp" />
+		<forward name="result" path="/result.jsp" />
+        <forward name="showReport" path="/reportForms/showReport.jsp" />
+	</global-forwards>
+
+	<action-mappings>
+    	
+		<!-- 首页(修改密码、退出系统) -->
+        <action path="/userAction" type="com.hatc.common.web.action.UserAction" parameter="method">
+            <forward name="setPwd" path="/other/setPwd.jsp" />
+        </action>
+
+        <!-- 通知管理 - 消息收发 -->
+        <action path="/msgListAction" type="com.hatc.common.web.action.message.MsgListAction" parameter="method">
+            <forward name="setNewMsg" path="/message/setNewMsg.jsp" />
+            <forward name="setReMsg" path="/message/setReMsg.jsp" />
+            <forward name="gotMsg" path="/message/gotMsg.jsp" />
+            <forward name="sentMsg" path="/message/sentMsg.jsp" />
+            <forward name="bckMsgList" path="/message/bckMsgList.jsp" />
+            <forward name="gotMsgList" path="/message/gotMsgList.jsp" />
+            <forward name="reMsgList" path="/message/reMsgList.jsp" />
+            <forward name="sentMsgList" path="/message/sentMsgList.jsp" />
+        </action>
+
+        <!-- 通知管理 - 用户组设定 -->
+        <action path="/msgGroupAction" type="com.hatc.common.web.action.message.MsgGroupAction" parameter="method">
+            <forward name="setMsgGroup" path="/message/setMsgGroup.jsp" />
+        </action>
+		
+		<!-- 登陆 -->
+		<action path="/loginAction" type="com.hatc.common.web.action.LoginAction" name="baseForm" parameter="method" scope="request">
+			<forward name="homepage" path="/main.jsp" />
+			<forward name="loginPwd" path="/loginPwd.jsp"/>
+			<forward name="menuIco" path="/menuIco.jsp" />
+		</action>
+        
+        <!-- 角色 -->
+        <action path="/roleAction" type="com.hatc.common.web.action.other.RoleAction" name="baseForm" parameter="method" scope="request">
+            <forward name="homepage" path="/main.jsp" />
+        </action>
+        
+        <!-- 自定义报表 -->
+        <action path="/userReportAction" type="com.hatc.common.web.action.report.UserReportAction" name="baseForm" parameter="method" scope="request">
+            <forward name="getUserReportList" path="/reportForms/user/getUserReportList.jsp" />
+            <forward name="setUserReportEdit" path="/reportForms/user/setUserReportEdit.jsp" />
+        </action>
+        <!-- 报表操作(打印、导出Excel、导出word、导出pdf) -->
+        <action path="/ReportOperateAction" type="com.hatc.common.web.action.report.ReportOperateAction" name="baseForm" parameter="method" scope="request">
+        	<forward name="" path=""></forward>
+        </action>
+        
+        <!-- 通航 通用字典表 -->
+		<action path="/dicTreeAction" type="com.hatc.common.dic.action.DicTreeAction" name="baseForm" parameter="method" scope="request">
+		 	<forward name="popAirP" path="/popChooseWindows/popAirP.jsp" />
+		</action>
+		
+		<!-- 归档计划查询 -->
+        <action path="/planPigeonholeAction" type="com.hatc.thyx.action.flyplan.PlanPigeonholeAction" parameter="method">
+            <forward name="pigeonholeList" path="/thyx/flyplan/planPigeonhole/pigeonholeList.jsp" />
+        </action>
+
+        <!-- 气象预报业务Action 
+		<action path="/weatherAction" type="com.hatc.weather.WeatherAction" scope="request" name="baseForm" parameter="method">
+			<forward name="weatherDraft" path="/Weather/forecast/forecastManagerList.jsp" />
+			<forward name="create" path="/Weather/forecast/editForecastForm.jsp" />
+			<forward name="cloudShape" path="/Weather/forecast/cloudShape.jsp" />
+			<forward name="editWeather" path="/Weather/forecast/editForecastForm.jsp" />
+			<forward name="weatherInfo" path="/Weather/forecast/forecastInfo.jsp" />
+			<forward name="weatherQuery" path="/Weather/weaSearchList.jsp" />
+			<forward name="firstPageWeather" path="/firstPageWeather.jsp" />			
+			<forward name="weatherDetail"  path="/Weather/weatherDetail.jsp" />
+			<forward name="weatherPreviewAction"  path="/weatherAction.do?method=forwardWeatherCreatePreview" />
+		</action>-->
+        
+	</action-mappings>
+
+	<controller nocache="true" inputForward="true" maxFileSize="10M" ></controller>
+
+	<message-resources parameter="Resources_zh_CN" />
+
+	<plug-in className="org.apache.struts.validator.ValidatorPlugIn">
+		<set-property property="pathnames"
+			value="/WEB-INF/validator-rules.xml,/WEB-INF/validation.xml" />
+	</plug-in>
+
+	<plug-in
+		className="org.springframework.web.struts.ContextLoaderPlugIn">
+		<set-property property="contextConfigLocation"
+			value="/WEB-INF/applicationContext-*.xml" />
+	</plug-in>
+    
+</struts-config>
+

@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hatc>
+    <!-- 服务子系统版本 -->
+    <item>
+        <parameter>SubVersion</parameter>
+        <value>S1.0.03</value>
+    </item>
+    <!-- WEB系统版本 -->
+    <item>
+        <parameter>WebVersion</parameter>
+        <value>1.0.21</value>
+    </item>
+    <!-- WEB系统发布日期 -->
+    <item>
+        <parameter>WebReleaseDate</parameter>
+        <value>2010-04-28</value>
+    </item>
+    <!-- 客户端保存路径 -->
+    <item>
+        <parameter>downClient</parameter>
+        <linux>/usr/local/upload/xtmsClient</linux>
+        <windows>c:/usr/local/upload/xtmsClient</windows>
+    </item>
+    <!-- 客户端文件名称 -->
+    <item>
+        <parameter>clientFileName_linux</parameter>
+        <value>xtmsClient_linux</value>
+    </item>
+    <item>
+        <parameter>clientFilePostfix_linux</parameter>
+        <value>tar.gz</value>
+    </item>
+    <item>
+        <parameter>clientFileName_windows</parameter>
+        <value>xtmsClient_windows</value>
+    </item>
+    <item>
+        <parameter>clientFilePostfix_windows</parameter>
+        <value>exe</value>
+    </item>
+    <!-- 报表打印支持软件名称 -->
+    <item>
+        <parameter>JDKFileName_linux</parameter>
+        <linux>jdk_linux</linux>
+    </item>
+    <item>
+        <parameter>JDKFilePostfix_linux</parameter>
+        <linux>tar.gz</linux>
+    </item>
+    <item>
+        <parameter>JDKFileName_windows</parameter>
+        <windows>jdk_windows</windows>
+    </item>
+    <item>
+        <parameter>JDKFilePostfix_windows</parameter>
+        <windows>exe</windows>
+    </item>
+    <!-- 上传文件保存路径 -->
+    <item>
+        <parameter>fileSavePath</parameter><!-- 参数名称 -->
+        <linux>/usr/local/upload</linux><!-- 参数值 -->
+        <windows>C:/usr/local/upload</windows><!-- 参数值 -->
+    </item>
+    <!-- 消息附件 -->
+    <item>
+        <parameter>path_msg</parameter>
+        <value>/import_msg</value>
+    </item>
+    <!-- 上传文件保存路径 -->
+    <item>
+        <parameter>path_temp</parameter>
+        <value>/temp</value>
+    </item>
+    <!-- 菜单风格 -->
+    <!-- 1 图标 2 (树型 + 图标) 3 树型 -->
+    <item>
+        <parameter>menuStyle</parameter>
+        <value>2</value>
+    </item>
+    <!-- 图标菜单最大折行数-->
+    <item>
+        <parameter>menuRowNum</parameter>
+        <value>8</value>
+    </item>
+    <!-- 图标菜单排列方式 -->
+    <!-- repeat_x 横向，repeat_y 纵向 -->
+    <item>
+        <parameter>menuRepeat</parameter>
+        <value>repeat_x</value>
+    </item>
+    <!-- 图标显示方式 1 大图标 2 一般图标-->
+    <item>
+        <parameter>icoStyle</parameter>
+        <value>2</value>
+    </item>
+    <!-- 菜单 右侧显示提示区域 0 不显示 1显示-->
+    <item>
+        <parameter>shortcutStyle</parameter>
+        <value>1</value>
+    </item>
+    <!-- 默认首页 -->
+    <item>
+        <parameter>firstWindow</parameter>
+        <value>/msgListAction.do?method=gotMsgList,menuFunctionId=BM20900</value>
+    </item>
+    <!-- 系统密级标识 -->
+    <item>
+        <parameter>system_secret_level</parameter>
+        <value>★内部★</value>
+    </item>
+    <!-- 系统登录密码错误次数限制 -->
+    <item>
+        <parameter>pwd_error_number</parameter>
+        <value>3</value>
+    </item>
+</hatc>

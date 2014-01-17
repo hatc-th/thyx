@@ -1,0 +1,141 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
+
+<beans>
+
+    <!-- Hibernate SessionFactory -->
+    <bean id="sessionFactory" class="org.springframework.orm.hibernate3.LocalSessionFactoryBean">
+        <property name="dataSource" ref="dataSource" />
+        <property name="mappingResources" >
+            <list>
+                <value>com/hatc/common/hibernate/pojo/TbSite.hbm.xml</value>
+                <value>com/hatc/common/hibernate/pojo/TbOnline.hbm.xml</value>
+                <value>com/hatc/common/hibernate/pojo/TbParameterSetup.hbm.xml</value>
+                <value>com/hatc/common/hibernate/pojo/TbUser.hbm.xml</value>
+                <value>com/hatc/common/hibernate/pojo/TbFunction.hbm.xml</value>
+                <!--<value>com/hatc/common/hibernate/pojo/TbUserReport.hbm.xml</value>
+                <value>com/hatc/common/hibernate/pojo/TbUserReportCol.hbm.xml</value>
+                <value>com/hatc/common/hibernate/pojo/TbUserReportFilter.hbm.xml</value>
+				气象信息删除
+				<value>com/hatc/hibernate/pojo/weather/TbWeather.hbm.xml</value>
+    			<value>com/hatc/hibernate/pojo/weather/TbWeatherAir.hbm.xml</value>
+    			<value>com/hatc/hibernate/pojo/weather/TbWeatherCloud.hbm.xml</value>
+    			<value>com/hatc/hibernate/pojo/weather/TbWeatherPhenomena.hbm.xml</value>
+    			<value>com/hatc/hibernate/pojo/weather/TbWeatherVisibility.hbm.xml</value>
+    			<value>com/hatc/hibernate/pojo/weather/TbWeatherWind.hbm.xml</value>
+    			<value>com/hatc/hibernate/pojo/weather/TbWeatherStation.hbm.xml</value>
+    			<value>com/hatc/hibernate/view/VwWeather.hbm.xml</value>
+
+				<value>org/yeeku/model/AuctionUser.hbm.xml</value>
+				<value>org/yeeku/model/Bid.hbm.xml</value>
+				<value>org/yeeku/model/Item.hbm.xml</value>
+				<value>org/yeeku/model/Kind.hbm.xml</value>
+				<value>org/yeeku/model/State.hbm.xml</value>-->
+				
+				<!-- 飞行计划 -->
+				<value>com/hatc/hibernate/pojo/TFpl.hbm.xml</value>
+				<value>com/hatc/hibernate/pojo/TFplCycle.hbm.xml</value>
+				<value>com/hatc/hibernate/pojo/TFplRs.hbm.xml</value>
+				<value>com/hatc/hibernate/pojo/TRegularRs.hbm.xml</value>
+				<value>com/hatc/hibernate/pojo/TFplRsP.hbm.xml</value>
+				<value>com/hatc/hibernate/pojo/TbApproveFlowRec.hbm.xml</value>
+				<value>com/hatc/hibernate/pojo/TAd.hbm.xml</value>
+				<value>com/hatc/hibernate/pojo/TNv.hbm.xml</value>
+				<value>com/hatc/hibernate/pojo/TFplActivity.hbm.xml</value>
+				<value>com/hatc/hibernate/pojo/TFsInterpret.hbm.xml</value>
+            </list>
+        </property>
+        <property name="hibernateProperties">
+            <props>
+                <prop key="hibernate.dialect">org.hibernate.dialect.Oracle9Dialect</prop>
+                <prop key="hibernate.show_sql">true</prop>
+            </props>
+        </property>
+    </bean>
+
+    <!-- Transaction manager for a single Hibernate SessionFactory (alternative to JTA) -->
+    <bean id="transactionManager" class="org.springframework.orm.hibernate3.HibernateTransactionManager">
+        <property name="sessionFactory" ref="sessionFactory" />
+    </bean>
+
+    <!-- Generic Dao - can be used when doing standard CRUD -->
+    <bean id="dao" class="com.hatc.base.hibernate.dao.hibernate.BaseDaoHibernate">
+        <property name="sessionFactory" ref="sessionFactory" />
+        <property name="dataSource" ref="dataSource" />
+    </bean>
+    
+       <bean id="sessionFactory1" class="org.springframework.orm.hibernate3.LocalSessionFactoryBean">
+        <property name="dataSource" ref="dataSource1" />
+        <property name="mappingResources">
+            <list>
+                 <value>com/hatc/common/hibernate/pojo/TbSite.hbm.xml</value>
+                <value>com/hatc/common/hibernate/pojo/TbOnline.hbm.xml</value>
+                <value>com/hatc/common/hibernate/pojo/TbParameterSetup.hbm.xml</value>
+                <value>com/hatc/common/hibernate/pojo/TbUser.hbm.xml</value>
+                <value>com/hatc/common/hibernate/pojo/TbFunction.hbm.xml</value>
+                <!--<value>com/hatc/common/hibernate/pojo/TbUserReport.hbm.xml</value>
+                <value>com/hatc/common/hibernate/pojo/TbUserReportCol.hbm.xml</value>
+                <value>com/hatc/common/hibernate/pojo/TbUserReportFilter.hbm.xml</value>
+				气象信息删除
+				<value>com/hatc/hibernate/pojo/weather/TbWeather.hbm.xml</value>
+    			<value>com/hatc/hibernate/pojo/weather/TbWeatherAir.hbm.xml</value>
+    			<value>com/hatc/hibernate/pojo/weather/TbWeatherCloud.hbm.xml</value>
+    			<value>com/hatc/hibernate/pojo/weather/TbWeatherPhenomena.hbm.xml</value>
+    			<value>com/hatc/hibernate/pojo/weather/TbWeatherVisibility.hbm.xml</value>
+    			<value>com/hatc/hibernate/pojo/weather/TbWeatherWind.hbm.xml</value>
+    			<value>com/hatc/hibernate/pojo/weather/TbWeatherStation.hbm.xml</value>
+    			<value>com/hatc/hibernate/view/VwWeather.hbm.xml</value>
+
+				<value>org/yeeku/model/AuctionUser.hbm.xml</value>
+				<value>org/yeeku/model/Bid.hbm.xml</value>
+				<value>org/yeeku/model/Item.hbm.xml</value>
+				<value>org/yeeku/model/Kind.hbm.xml</value>
+				<value>org/yeeku/model/State.hbm.xml</value>-->
+				
+				<!-- 飞行计划 -->
+				<value>com/hatc/hibernate/pojo/TFpl.hbm.xml</value>
+				<value>com/hatc/hibernate/pojo/TFplCycle.hbm.xml</value>
+				<value>com/hatc/hibernate/pojo/TFplRs.hbm.xml</value>
+				<value>com/hatc/hibernate/pojo/TRegularRs.hbm.xml</value>
+				<value>com/hatc/hibernate/pojo/TFplRsP.hbm.xml</value>
+				<value>com/hatc/hibernate/pojo/TbApproveFlowRec.hbm.xml</value>
+				<value>com/hatc/hibernate/pojo/TAd.hbm.xml</value>
+				<value>com/hatc/hibernate/pojo/TNv.hbm.xml</value>
+				<value>com/hatc/hibernate/pojo/TFplActivity.hbm.xml</value>
+				
+				
+            </list>
+        </property>
+        <property name="hibernateProperties">
+            <props>
+                <prop key="hibernate.dialect">org.hibernate.dialect.Oracle9Dialect</prop>
+                <prop key="hibernate.show_sql">true</prop>
+            </props>
+        </property>
+    </bean>
+    
+    <bean id="sessionFactory2" class="org.springframework.orm.hibernate3.LocalSessionFactoryBean">
+        <property name="dataSource" ref="dataSource2" />
+        <property name="hibernateProperties">
+            <props>
+                <prop key="hibernate.dialect">org.hibernate.dialect.Oracle9Dialect</prop>
+                <prop key="hibernate.show_sql">true</prop>
+            </props>
+        </property>
+    </bean>
+
+    <!-- Transaction manager for a single Hibernate SessionFactory (alternative to JTA) -->
+    <bean id="transactionManager1" class="org.springframework.orm.hibernate3.HibernateTransactionManager">
+        <property name="sessionFactory" ref="sessionFactory1" />
+    </bean>
+
+    <!-- Generic Dao - can be used when doing standard CRUD -->
+    <bean id="dao1" class="com.hatc.base.hibernate.dao.hibernate.BaseDaoHibernate">
+        <property name="sessionFactory" ref="sessionFactory1" />
+        <property name="dataSource" ref="dataSource1" />
+    </bean>
+    
+    <bean id="szkydao" class="com.hatc.base.hibernate.dao.hibernate.BaseDaoHibernate">
+        <property name="sessionFactory" ref="sessionFactory2" />
+    </bean>
+</beans>

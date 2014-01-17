@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
+
+<beans>
+
+    <bean id="txProxyTemplate" abstract="true" autowire="byName"
+        class="org.springframework.transaction.interceptor.TransactionProxyFactoryBean"> 
+        <property name="transactionManager" ref="transactionManager" />      
+        <property name="transactionAttributes">
+            <props><prop key="insert*">PROPAGATION_REQUIRED,-BaseException</prop>
+				<prop key="save*">PROPAGATION_REQUIRED,-BaseException</prop>
+				<prop key="copy*">PROPAGATION_REQUIRED,-BaseException</prop>
+				<prop key="update*">PROPAGATION_REQUIRED,-BaseException</prop>
+				<prop key="remove*">PROPAGATION_REQUIRED,-BaseException</prop>
+				<prop key="del*">PROPAGATION_REQUIRED,-BaseException</prop>
+				<prop key="init*">PROPAGATION_REQUIRED,-BaseException</prop>
+				<prop key="*">PROPAGATION_REQUIRED,readOnly</prop>
+            </props>
+        </property>        
+        <property name="postInterceptors">
+            <list>
+                <ref bean="afterAdvisor" />
+                <ref bean="exceptionAdvisor" />
+            </list>
+        </property>
+    </bean>
+
+    <bean id="afterAdvisor" class="org.springframework.aop.support.RegexpMethodPointcutAdvisor">
+        <property name="advice">
+            <bean class="com.hatc.common.service.aop.ProjectAfterAdvisor" />
+        </property>       
+        <property name="patterns">
+            <list>
+                <value>.*.*</value>
+            </list>
+        </property>
+    </bean>
+    
+    <bean id="exceptionAdvisor" class="org.springframework.aop.support.RegexpMethodPointcutAdvisor">
+		<property name="advice">
+			<bean class="com.hatc.common.service.aop.ProjectExceptionAdvisor" />
+		</property>
+		<property name="patterns">
+			<list>
+				<value>.*.*</value>
+			</list>
+		</property>
+	</bean>
+
+    <!-- Generic manager that can be used to do basic CRUD operations on any objects -->
+    <bean id="manager" parent="txProxyTemplate">
+        <property name="target">
+            <bean class="com.hatc.base.service.impl.BaseManager">
+                <property name="dao" ref="dao" />
+            </bean>
+        </property>
+    </bean>
+
+    <!-- Generic manager that can be used to do basic CRUD operations on any objects -->
+    <bean id="projectManager" parent="txProxyTemplate">
+        <property name="target">
+            <bean class="com.hatc.common.service.impl.ProjectManagerImpl">
+                <property name="dao" ref="dao" />
+                <property name="secuServ" ref="securityService" />
+            </bean>
+        </property>
+    </bean>
+
+    <!-- 首页(修改密码、退出系统) -->
+    <bean id="userManager" parent="txProxyTemplate">
+        <property name="target">
+            <bean class="com.hatc.common.service.other.impl.UserManagerImpl">
+                <property name="dao" ref="dao" />
+            </bean>
+        </property>
+    </bean>
+
+    <!-- 通知管理 - 消息收发
+    <bean id="msgListManager" parent="txProxyTemplate">
+        <property name="target">
+            <bean class="com.hatc.common.service.message.impl.MsgListManagerImpl">
+                <property name="dao" ref="dao" />
+            </bean>
+        </property>
+    </bean> -->
+
+    <!-- 通知管理 - 用户组设定 
+    <bean id="msgGroupManager" parent="txProxyTemplate">
+        <property name="target">
+            <bean class="com.hatc.common.service.message.impl.MsgGroupManagerImpl">
+                <property name="dao" ref="dao" />
+            </bean>
+        </property>
+    </bean>-->
+
+    <!-- 用户登录 -->
+    <bean id="loginManager" parent="txProxyTemplate">
+        <property name="target">
+            <bean class="com.hatc.common.service.other.impl.LoginManagerImpl" >
+                <property name="dao" ref="dao" />
+                <property name="secuServ" ref="securityService" />
+            </bean>
+        </property>
+    </bean>
+
+    <!-- 角色 -->
+    <bean id="roleManager" parent="txProxyTemplate">
+        <property name="target">
+            <bean class="com.hatc.common.service.other.impl.RoleManagerImpl">
+                <property name="dao" ref="dao" />
+            </bean>
+        </property>
+    </bean>
+
+    <!-- 用户自定义报表 
+    <bean id="userReportManager" parent="txProxyTemplate">
+        <property name="target">
+            <bean class="com.hatc.common.service.report.impl.UserReportManagerImpl">
+                <property name="dao" ref="dao" />
+            </bean>
+        </property>
+    </bean>-->
+    
+    <!-- 报表操作(打印、导出Excel、导出word、导出pdf) 
+	<bean id="reportOperateManager" parent="txProxyTemplate">
+		<property name="target">
+			<bean class="com.hatc.common.service.report.impl.UserReportManagerImpl">
+				<property name="dao" ref="dao" />
+			</bean>
+		</property>
+	</bean>-->
+
+    <!-- 流程处理 
+    <bean id="flowManager" parent="txProxyTemplate">
+        <property name="target">
+            <bean class="com.hatc.common.service.flow.impl.FlowManagerImpl">
+                <property name="dao" ref="dao" />
+            </bean>
+        </property>
+    </bean>-->
+
+    <!-- 变更处理 
+    <bean id="updateManager" parent="txProxyTemplate">
+        <property name="target">
+            <bean class="com.hatc.common.service.update.impl.UpdateManagerImpl">
+                <property name="dao" ref="dao" />
+            </bean>
+        </property>
+    </bean>-->
+
+    <!-- 文档处理 
+    <bean id="documentManager" parent="txProxyTemplate">
+        <property name="target">
+            <bean class="com.hatc.common.service.document.impl.DocumentManagerImpl">
+                <property name="dao" ref="dao" />
+            </bean>
+        </property>
+    </bean>-->
+
+		<!-- 系统数据加载管理器 -->
+	<bean id="sysDataLoadManager" parent="txProxyTemplate">
+		<property name="target">
+			<bean class="com.hatc.common.manager.SysDataLoadManagerImpl">
+				<property name="dao" ref="dao" />
+				<property name="projectItemCode" ref="projectItemCode" />
+			</bean>
+		</property>
+	</bean>
+	
+	<!-- 系统字典 new-->
+	<bean id="projectItemCode" class="com.hatc.common.contants.ProjectItemCode">
+		<property name="codeService" ref="codeService" />
+	</bean>
+	<!-- 气象预报Manager
+	<bean id="weatherManager" parent="txProxyTemplate">
+		<property name="target">
+			<bean class="com.hatc.weather.impl.WeatherManagerImpl">
+				<property name="dao" ref="dao" />
+			</bean>
+		</property>
+	</bean> -->
+  
+</beans>

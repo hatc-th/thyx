@@ -1,0 +1,344 @@
+/* CSS Document */
+/** ****************************************全局样式****************************** */
+a{
+text-decoration:none;
+}
+a img{
+border:0px;
+}
+ul{
+margin:0px;
+padding:0px;
+}
+ul li{
+margin:0px;
+padding:0px;
+}
+body{
+background:#c6d8e2;
+margin:0px;
+padding:0px;
+}
+/** ****************************************全局样式****************************** */
+
+
+/** ******************************************TOPtop******************************** */
+/**.top{
+height:210px;
+width:100%
+}
+.topTop{
+height:42px;
+width:99.8%;
+background:url(../../images/th_topTop_bg.jpg);
+border-left:1px #9cb3c1 solid;
+border-right:1px #9cb3c1 solid;
+border-bottom:1px #9cb3c1 solid;
+}
+.topRight{
+float:right;
+width:410px;
+height:22px;
+margin-top:10px;
+margin-right:5px;
+}
+.topRight ul li{
+list-style:none;
+float:left;
+font-size:14px;
+font-weight:bold;
+margin-right:8px;
+padding-right:8px;
+}
+.topRight ul{
+float:right;
+}
+.topRight ul li a{
+color:#f7f7db;
+}
+*/
+.liBorder{
+border-right:2px #f7f7db solid;
+line-height:15px;
+}
+.liBorder img{
+height:14px;
+width:14px;
+padding-left:3px;
+padding-right:3px;
+}
+.liBorderExit img{
+height:15px;
+width:15px;
+padding-left:5px;
+padding-right:5px;
+}
+.topRight ul li img{
+height:20px;
+margin-right:4px;
+line-height:20px;
+}
+
+.topCenter{
+height:75px;
+border-bottom:1px #9cb3c1 solid;
+border-left:1px #9cb3c1 solid;
+border-right:1px #9cb3c1 solid;
+width:99.8%;
+/**
+width:1674px;
+margin-left:2.5%;
+margin-right:2.5%;*/
+background:url(../../images/th_topCenter_bg.jpg);
+}
+.topCenterLeft{
+margin-left:40px;
+width:605px;
+height:71px;
+float:left;
+}
+.topCenterRight{
+float:right;
+}
+.topCenterRight{
+float:right;
+width:410px;
+height:22px;
+margin-top:10px;
+margin-right:45px;
+}
+.topCenterRight ul li{
+list-style:none;
+float:left;
+font-size:12px;
+font-weight:bold;
+margin-right:8px;
+padding-right:8px;
+}
+.topCenterRight ul{
+float:right;
+}
+.topCenterRight ul li a{
+color:#f7f7db;
+}
+
+
+
+.titleImgLeft{
+float:left;
+width:256px;
+height:71px;
+/**margin-top:10px;*/
+}
+.titleImgRight{
+float:right;
+margin-top:36px;
+}
+.titleImgLeft img{
+width:256px;
+height:71px;
+}
+.titleImgRight img{
+height:35px;
+width:348px;
+}
+.topCneter img{
+height:120px;
+width:100%;
+}
+.topBottom{
+height:35px;
+width:95%;
+margin-left:2.5%;
+margin-right:2.5%;
+background:url(../../images/th_26_1.png);
+}
+.topBottomLeft{
+width:550px;
+float:left;
+}
+.topBottomright{
+width:405px;
+float:right;
+}
+.ShowleftRoundCorner{
+background:url(../../images/th_left_yj.png);
+float:left;
+width:18px;
+height:35px;
+}
+.ShowRightRoundCorner{
+background:url(../../images/th_right_yj.png);
+width:18px;
+height:35px;
+float:right;
+}
+
+/** ****************************************菜单控制模块****************************** */
+.meunContext{
+width:1000px;
+}
+meunImg{
+cursor:pointer;
+}
+.meunContext ul li{
+cursor:pointer;
+float:left;
+list-style:none;
+margin-top:5px;
+color:#FFFFFF;
+font-weight:bold;
+}
+.ulliNoImgUl{
+width:172px;
+}
+.meunContext ul li:hover{
+background:#244153;
+}
+.meunContext ul li a{
+}
+.ulLiNoImg{
+padding-top:5px;
+text-align:center;
+border-right:1px #fff solid;
+}
+.ulLiNoImg span{
+margin-left:10px;
+margin-right:10px;
+}
+.ulLiNoImg ul li{
+float:left;
+}
+.homeImg{
+margin-right:20px;
+}
+.ulLiNoImgBr{
+border-left:1px #fff solid;
+}
+.homeImg img{
+width:30px;
+height:25px;
+}
+.homeImgTo{
+width:30px;
+height:25px;
+}
+.messageContext{
+margin-top:6px;
+float:left;
+}
+.messageContext span{
+color:#FFFFFF;
+font-weight:bold;
+font-size:13px;
+}
+.meunUl, .meunUl ul { 
+	padding: 0;
+	margin: 0;
+	list-style: none;
+}
+.meunUl li { 
+	float: left;
+	position: relative;
+	color: #fff;
+	font: 16px Verdana, Geneva, Arial, Helvetica, sans-serif;
+}
+.meunUl a:link, .meunUl a:visited {
+	display: block;
+	text-decoration: none;
+	color: #fff;
+}
+.meunUl ul {
+	display: none;
+	position: absolute;
+}
+.meunUl ul li{
+	float: none;
+	border: 0 none transparent;
+	background-color: #1b4c68;
+	font-size: 90%;
+	margin: 0;
+	padding: 0;
+	padding-top:10px;
+}
+.meunUl li:hover ul {
+	display: block;
+}
+/**==========================  第三层子菜单 ===============================================*/
+.dlDdMuen dl{
+margin-left:132px;
+margin-top:0px;
+width:210px;
+padding-top:0px;
+}
+.dlDdMuen dl dd{
+background:#00172e;
+float: none;
+border: 0 none transparent;
+font-size: 100%;
+padding-top:10px;
+}
+.dlDdMuen dl dd:hover{
+background:#274353;
+}
+.showDd:hover div{
+display:block;
+}
+.dlDdMuen{
+position:absolute;
+z-index:2;
+display:none;
+cursor:pointer;
+top:0px;
+margin:0px;
+padding:0px;
+}
+/** ================================设置圆角==================================================== */
+.showMeunRoundCorner{
+background:none;!important;
+height:13px;!important;
+margin:0px !important;
+padding:0px !important;
+}
+.smrcTopLeftTo{
+float:left;!important;
+width:113px;!important;
+margin-left:15px;
+}
+.smrcLeft{
+float:left;
+width:159px;
+}
+.smrcLeftTo{
+float:left;
+width:157px;
+}
+.smrcRight{
+padding:0px;
+margin:0px;
+border:0px;
+float:right;
+height:13px;
+width:13px;
+}
+.smrcLeftLeft{
+float:left;
+}
+.smrcLeftLeftTo{
+float:left;
+height:13px;
+width:13px;
+background:#00172e;!important;
+}
+.smrcLeftRightTo{
+float:right;
+width:144px;
+height:13px;
+background:#00172e;!important;
+}
+.smrcLeftRight{
+background: #1b4c68;!important;
+float:right;
+width:146px;
+height:13px;
+}

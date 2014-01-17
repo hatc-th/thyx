@@ -1,0 +1,174 @@
+/* CSS Document */
+/**.fourWeatherImgUl{
+height:175px;
+width:835px;
+}
+.fourWeatherImgUl li{
+padding:0px;
+margin:0px;
+list-style:none;
+float:left;
+border:5px #19435b solid;
+width:400px;
+height:167px;
+}
+.fourWeatherImgUl li img{
+width:400px;
+height:167px;
+}
+.imgUlPadding{
+margin-left:15px!important;
+float:right;
+}*/
+/********************************四张图片时的布局*********************************/
+.fourWeatherImgTable{
+padding:0px;
+margin:0px;
+border-spacing:0px;
+border-collapse:collapse;
+caption-side:top;
+empty-cells:show;
+width:863px;
+height:345px;
+cursor:pointer;
+}
+.fourWeatherImgTable tr{
+height:170px;
+width:855;
+}
+.fourWeatherImgTable tr img{
+width:423px;
+height:170px;
+}
+.fourWeatherImgTable tr td{
+border:5px #19435b solid;
+height:170px;
+}
+/********************************相册*********************************/
+#bImgDiv{
+display:none;
+width:855px;
+height:358px;
+border:4px #19435b solid;
+}
+.closeBImg{
+width:70px;
+height:28px;
+padding-top:2px;
+position:absolute;
+z-index:6;
+left: 1510px;
+font-size:18px;
+color:#FFFFFF;
+background:#19435b;
+cursor:pointer;
+}
+.imgRightward{
+width:428px;
+height:355px;
+z-index:6;
+position:absolute;
+left: 1150px;
+_left:1185px;
+background:#ccc;
+cursor:url(../../../images2/rightward.ico),auto;
+opacity:0;
+filter: Alpha(Opacity=0);
+}
+.imgLeftward{
+width:426px;
+height:355px;
+z-index:4;
+position:absolute;
+left: 724px;
+_left:759px;
+cursor:url(../../../images2/leftward.ico),auto;
+background:#ccc;
+opacity:0;
+filter: Alpha(Opacity=0);
+}
+.bImgMessage{
+display:none;
+position:absolute;
+z-index:5;
+left: 724px;
+top:720px;
+_left: 755px;
+_top:730px;
+width:855px;
+height:15px;
+_width:860px;
+text-align:left;
+color:#FFFFFF;
+padding-top:5px;
+background:#19435b;
+}
+/********************************地图机场图切换*********************************/
+.showAirdromeImgDiv{
+display:none;
+width:1590px;
+height:778px;
+overflow:auto;
+position:absolute;
+z-index:8;
+left:0px;
+top:0px;
+text-align:center;
+background:#C6D8E2;
+}
+#airdromeImg{
+/**width:855px;
+height:350px;*/
+}
+.foldImgDiv{
+display:none;
+z-index:8;
+position:absolute;
+left: 725px;
+top:23px;
+opacity:0.5;
+filter: Alpha(Opacity=50);
+}
+.mapCloseBImg{
+border:1px #19435b solid;
+width:50px;
+height:25px;
+z-index:8;
+position:absolute;
+left: 804px;
+font-size:18px;
+color:#FFFFFF;
+background:#19435b;
+cursor:pointer;
+}
+.mapCloseBImg:hover{
+filter: Alpha(Opacity=100);
+opacity:1;
+}
+.blowupDiv{
+background:url(../../../images2/blowupDiv.png);
+/*background:#FFFFFF;*/
+/*border:1px #ccc solid;*/
+cursor:pointer;
+width:25px;
+height:25px;
+position:absolute;
+left:788px;
+top:538px;
+}
+
+/********************************浮动航线操作菜单*********************************/
+.setupLineDivMeun{
+display:none;
+position:absolute;
+width:106px;
+height:20px;
+padding-top:28px;
+left:53.45em;
+background:url(../../../images2/show_setup_meun.png) no-repeat left bottom;
+}
+.setupLineDivMeun img{
+cursor:pointer;
+width:24px;
+height:16px;
+}

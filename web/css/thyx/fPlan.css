@@ -1,0 +1,253 @@
+/* CSS Document */
+a{
+text-decoration:none;
+}
+a img{
+border:0px;
+}
+ul{
+margin:0px;
+padding:0px;
+}
+ul li{
+margin:0px;
+padding:0px;
+}
+body{
+background:#c6d8e2;
+margin:0px;
+padding:0px;
+font-size:12px;
+font:"宋体";
+}
+
+/*******************************设置圆角*****************************************/
+.titleLeftRound{
+height:25px;
+}
+round{
+height:14px;
+}
+.roundLeft{
+float:left;
+}
+.roundRight{
+width:10px;
+float:right;
+}
+.roundLeftLeft{
+width:10px;
+height:14px;
+float:left;
+}
+.leftRound{
+width:705px;
+}
+/** 右边地图部分圆角设置，暂时不用
+.rightRound{
+width:855px;
+}**/
+.topRoundLeftRight{
+text-align:left;
+height:25px;
+float:right;
+width:695px;
+background:#f0f0f0;
+}
+.roundLeftRight{
+text-align:left;
+height:14px;
+float:right;
+width:695px;
+background:#f0f0f0;
+}
+/**  右边地图部分圆角设置，暂时不用
+.roundRightRight{
+height:14px;
+float:right;
+width:845px;
+background:#f0f0f0;
+}**/
+.roundTitle{
+background:url(../../images/round_title.PNG);
+height:19px;
+width:126px;
+color:#FFFFFF;
+font-size:14px;
+text-align:center;
+font-weight:bold;
+padding-top:6px;
+}
+/*******************************页面布局*********************************************/
+.globalDiv{
+text-align:center;
+}
+.navText{
+padding-top:3px;
+/**border:1px red solid;*/
+height:10px;
+text-align:left;
+width:1585px;
+color:#555656;
+font-weight:bold;
+font-size:12px;
+}
+
+
+/*******************************页面布局-左边部分*********************************************/
+/**.fPlanContextText
+ .fPlanLeftTop
+ .fPlanLeftTopContext 
+ .fPlanLeftCenter 
+ .fPlanLeftCenterContext 
+ .fPlanLeftBottom 
+ .fPlanLeftBottomContext{
+width:715px;
+}*/
+.fPlanContext{
+/**border:1px red solid;*/
+margin-top:5px;
+height:725px;
+width:1585px;
+}
+.fPlanContextText{
+/**border:1px red solid;*/
+width:715px;
+float:left;
+height:725px;
+}
+.fPlanLeftTop{
+/**border:1px red solid;*/
+width:715px;
+height:338px;
+}
+.fPlanLeftTopContext{
+width:715px;
+background:#f0f0f0;
+height:299px;
+}
+.fPlanLeftCenter{
+width:715px;
+/**border:1px red solid;*/
+height:190px;
+margin-top:5px;
+}
+.fPlanLeftCenterContext{
+width:715px;
+background:#f0f0f0;
+height:147px;
+padding-top:4px;
+}
+.fPlanLeftBottom{
+width:715px;
+margin-top:5px;
+height:189px;
+}
+.fPlanLeftBottomContext{
+width:715px;
+background:#f0f0f0;
+height:138px;
+/** 不合格的写法，padding不应该写在这里 */
+padding-top:9px;
+}
+
+/*******************************页面布局-右边部分**********************************************/
+/**
+#EDECEC
+#e6e6e6
+#f0f0f0
+*/
+.fPlanContextImg{
+/**border:1px red solid;*/
+float:right;
+width:865px;
+height:725px;
+_width:855px;
+}
+
+.fPlanRightTop
+ .fPlanRightTopContext
+ .fPlanRightBottom
+{
+width:865px;
+_width:855px;
+}
+.fPlanRightTop{
+width:865px;
+height:360px;
+_width:855px;
+}
+.fPlanRightTopContext{
+/**background:#f0f0f0;*/
+height:350px;
+border:4px #19435b solid;
+width:855px;
+_width:845px;
+_height:340px;
+}
+.fPlanRightBottom{
+width:865px;
+_width:855px;
+height:360px;
+}
+.fPlanRightBottomContext{
+/**background:#f0f0f0;*/
+width:855px;
+_width:855px;
+height:350px;
+}
+/*******************************页面布局*********************************************/
+.bottomButtonArea{
+padding-top:5px;
+width:1585px;
+height:30px;
+background:url(../../images/djb.PNG) bottom;
+}
+.buttonArea input{
+border:0px red solid;
+height:25px;
+width:80px;
+color:#3e3e3e;
+}
+.buttonArea1{
+background:url(../../images/big_bc_bg.png);
+}
+.buttonArea2{
+background:url(../../images/big_tj_bg.png);
+}
+.buttonArea3{
+background:url(../../images/big_qx_bg.png);
+}
+/*************************************查询页面**************************************/
+.fplanListCheckDiv{
+margin-bottom:10px;
+margin-top:10px;
+}
+.fPlanListDiv{
+width:1585px;
+margin-top:10px;
+}
+.fPlanListTable{
+width:1585px !important;
+}
+.fPlanListTable tr{
+	height:35px;
+}
+.fPlanListTableTd{
+	width:300px;
+}
+.fplanListDivLine{
+border:1px #ccc solid;
+width:1585px;
+}
+.fplanListCheckButton{
+text-align:right;
+margin-top:8px;
+}
+/*****************************TODO  分页样式   暂时************************/
+.pageDiv{
+margin-top:5px;
+text-align:right;
+color:#3e3e3e;
+cursor:pointer;
+}

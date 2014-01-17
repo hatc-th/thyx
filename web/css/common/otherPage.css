@@ -1,0 +1,69 @@
+/* CSS Document */
+.ad_globalDiv{
+overflow:auto;
+width:294px;
+height:380px;
+/*margin-top:10px;*/
+border:1px #ccc solid;
+text-align:center;
+color:#3E3E3E;
+font-size:14px;
+}
+.ad_firstLayer{
+text-align:left;
+margin-left:70px;
+}
+.ad_margin{
+margin-left:10px;
+}
+.ad_hidden{
+display:none;
+}
+.ad_marginHidden{
+margin-left:30px;
+display:none;
+}
+.otherPageButton{
+margin-top:15px;
+text-align:center;
+}
+.skyWayListClass{
+margin-left:15px;
+margin-top:10px;
+}
+.skyWayListClass img{
+cursor:pointer;
+}
+.nv_globalDiv{
+height:395px;
+width:710px;
+text-align:center;
+overflow-y: auto;
+border:1px #ccc solid;
+}
+.nv_checkDiv{
+margin-bottom:10px;
+margin-top:10px;
+}
+.isMainLineSelect{
+border:1px #ccc solid;
+width:75px;
+}
+.airdromeSpan{
+cursor:pointer;
+color:red;
+}
+.rr_globalDiv{
+height:264px;
+width:720px;
+text-align:center;
+overflow-y: auto;
+}
+/*****************************TODO  分页样式   暂时************************/
+.pageDiv{
+margin-top:5px;
+text-align:right;
+margin-right:15px;
+color:#3e3e3e;
+cursor:pointer;
+}

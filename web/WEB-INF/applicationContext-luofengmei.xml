@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="GBK"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+
+	<!-- 试验实施方案管理 -->
+	<bean id="flyPlanManager" parent="txProxyTemplate">
+		<property name="target">
+			<bean class="com.hatc.thyx.service.flyplan.impl.FlyPlanManagerImpl">
+				<property name="szkydao" ref="szkydao" />
+            	<property name="dao" ref="dao" />
+            	<property name="dao1" ref="dao1" />
+			</bean>
+		</property>
+	</bean> 
+	
+</beans>

@@ -1,0 +1,24 @@
+/* CSS Document */
+.centerContext{
+height:836px;
+width:1615px;
+}
+.contextTitle{
+margin-bottom:8px;
+margin-top:8px;
+font-weight:bold;
+cursor:pointer;
+}
+.centerContext iframe{
+width:100%;
+height:100%;
+background:#c6d8e2;
+}
+.centerContext iframe body{
+background:#c6d8e2;
+}
+.iframeCenter{
+width:1615px;
+height:836px;
+margin-left:44px;
+}

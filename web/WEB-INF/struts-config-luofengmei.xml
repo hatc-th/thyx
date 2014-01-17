@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE struts-config PUBLIC "-//Apache Software Foundation//DTD Struts Configuration 1.2//EN" "http://struts.apache.org/dtds/struts-config_1_2.dtd">
+<struts-config>
+	<action-mappings>
+   	   
+   	   <!-- 试验实施方案记录管理 -->
+		<action path="/flyPlanAction" type="com.hatc.thyx.web.flyplan.FlyPlanAction" parameter="method">
+			<!-- 用户飞行计划管理页面 -->
+			<forward name="searchFlyPlanList" path="/thyx/flyplan/flyPlanManageList.jsp" />
+			<!-- 飞行计划信息列表 -->
+			<forward name="activateFlyPlanList" path="/thyx/flyplan/flyPlanActivateList.jsp" />
+			<!-- 用户飞行计划查询页面 -->
+			<forward name="queryFlyPlanList" path="/thyx/flyplan/flyPlanQueryList.jsp" />
+			<!-- 新建和修改飞行计划信息页面 -->
+			<forward name="editFlyPlanInfo" path="/thyx/flyplan/flyPlanEdit.jsp" />
+			<!-- 常用航路航线 -->
+			<forward name="generalSkyWayList" path="/thyx/flyplan/generalSkyWaysList.jsp" />
+			<!-- 查看飞行计划 -->
+			<forward name="viewFlyPlanInfo" path="/thyx/flyplan/flyPlanInfoDetail.jsp" />
+		</action>
+		
+	</action-mappings>
+</struts-config>

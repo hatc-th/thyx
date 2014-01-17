@@ -1,0 +1,326 @@
+/* CSS Document */
+a{
+text-decoration:none;
+}
+a img{
+border:0px;
+}
+ul{
+margin:0px;
+padding:0px;
+}
+ul li{
+margin:0px;
+padding:0px;
+}
+body{
+background:url(../../../images2/contextPagebg.png);
+margin:0px;
+padding:0px;
+font-size:12px;
+font:"宋体";
+}
+
+/*******************************设置圆角*****************************************/
+.titleLeftRound{
+height:25px;
+}
+.round{
+height:14px;
+}
+.roundLeft{
+float:left;
+}
+.roundRight{
+width:10px;
+/**float:right;*/
+position: absolute;
+margin-left: 705px;
+}
+.roundLeftLeft{
+width:10px;
+height:14px;
+float:left;
+}
+.leftRound{
+width:705px;
+}
+/** 右边地图部分圆角设置，暂时不用
+.rightRound{
+width:855px;
+}**/
+.topRoundLeftRight{
+text-align:left;
+height:22px;
+float:right;
+width:695px;
+/*border-bottom:3px #E8E8E8 solid;*/
+/*background:#f0f0f0;*/
+}
+.roundLeftRight{
+text-align:left;
+height:11px;
+float:right;
+width:695px;
+/*background:#f0f0f0;*/
+border-bottom:3px #E8E8E8 solid;
+}
+
+/**  右边地图部分圆角设置，暂时不用
+.roundRightRight{
+height:14px;
+float:right;
+width:845px;
+background:#f0f0f0;
+}**/
+.roundTitle{
+/*background:url(images2/round_title.PNG);*/
+height:19px;
+width:80px;
+color:#FFFFFF;
+font-size:14px;
+text-align:right;
+font-weight:bold;
+padding-top:3px;
+float:left;
+}
+.roundTitleRight{
+float:right;
+width:595px;
+margin-top:10px;
+height:1px;
+border-bottom:3px #E8E8E8 solid;
+}
+.tabSecurityTitleRight{
+float:right;
+width:395px;
+margin-top:10px;
+height:1px;
+border-bottom:3px #E8E8E8 solid;
+}
+
+.mapRound{
+height:10px;
+}
+.mapRoundLeftLeft{
+width:10px;
+height:10px;
+float:left;
+margin:0px;
+padding:0px;
+}
+.mapLeftRound{
+height:10px;
+width:855px;
+float:left;
+margin:0px;
+padding:0px;
+}
+.mapLeftRoundTo{
+	margin-top:-1px;
+}
+.mapRoundLeftRight{
+float:right;
+width:845px;
+height:1px;
+border-bottom:5px #E8E8E8 solid;
+margin-top: -1px;
+}
+.bMapRoundLeftRight{
+height:6px;
+border:0px !important;
+border-bottom:5px #E8E8E8 solid !important; 
+}
+.mapRoundRight{
+width:10px;
+height:5px;
+position:absolute;
+margin-top: 0px;
+margin-left: 855px;
+}
+.mapRoundRightTo{
+	margin-top:-1px;
+}
+/*******************************页面布局*********************************************/
+.globalDiv{
+text-align:center;
+margin-left:48px;
+}
+.navText{
+/**border:1px red solid;*/
+height:15px;
+padding-top:12px;
+text-align:left;
+width:98%;
+color:#fff;
+font-weight:bold;
+font-size:12px;
+}
+
+
+/*******************************页面布局-左边部分*********************************************/
+.fPlanContext{
+margin-top:5px;
+height:785px;
+width:1595px;
+min-width:1595px;
+}
+.fPlanContextText{
+width:715px;
+float:left;
+height:725px;
+min-width:715px;
+}
+.fPlanLeftTop{
+width:715px;
+height:338px;
+min-width:715px;
+}
+.fPlanLeftTopContext{
+width:709px;
+height:299px;
+border-left:3px #E8E8E8 solid;
+border-right:3px #E8E8E8 solid;
+}
+.fPlanLeftCenter{
+width:715px;
+height:209px;
+margin-top:5px;
+min-width:715px;
+}
+.fPlanLeftCenterContext{
+width:709px;
+height:124px;
+padding-top:4px;
+border-left:3px #E8E8E8 solid;
+border-right:3px #E8E8E8 solid;
+}
+.fPlanLeftBottom{
+width:715px;
+margin-top:5px;
+height:167px;
+min-width:715px;
+}
+.fPlanLeftBottomContext{
+width:709px;
+height:160px;
+/** 不合格的写法，padding不应该写在这里 */
+padding-top:9px;
+border-left:3px #E8E8E8 solid;
+border-right:3px #E8E8E8 solid;
+}
+.showMapDiv{
+width:845px;
+height:510px;
+margin:0px;
+padding:0px;
+margin-left:5px;
+min-width:845px;
+}
+#map{
+	margin:0px;
+}
+/*******************************页面布局-右边部分**********************************************/
+/**
+#EDECEC
+#e6e6e6
+#f0f0f0
+*/
+.fPlanContextImg{
+/**border:1px red solid;*/
+float:right;
+width:865px;
+height:725px;
+_width:855px;
+min-width:865px;
+}
+
+.fPlanRightTop
+ .fPlanRightTopContext
+ .fPlanRightBottom
+{
+}
+.fPlanRightTop{
+margin-top:11px;
+width:865px;
+height:520px;
+_width:855px;
+min-width:865px;
+}
+.fPlanRightTopContext{
+margin:0px;
+padding:0px;
+height:510px;
+border-left:5px #E8E8E8 solid;
+border-right:5px #E8E8E8 solid;
+width:855px;
+_width:845px;
+}
+.fPlanRightBottom{
+width:865px;
+_width:855px;
+height:170px;
+margin-top:22px;
+min-width:865px;
+}
+.fPlanRightBottomContext{
+width:855px;
+_width:855px;
+height:150px;
+border-left:5px #E8E8E8 solid;
+border-right:5px #E8E8E8 solid;
+}
+/*******************************页面布局*********************************************/
+.bottomButtonArea{
+padding-top:5px;
+width:1585px;
+height:30px;
+}
+.buttonArea input{
+border:0px red solid;
+height:25px;
+width:80px;
+color:#3E3E3E;
+}
+.buttonArea1{
+background:url(../../../images2/big_bc_bg.png);
+}
+.buttonArea2{
+background:url(../../../images2/big_tj_bg.png);
+}
+.buttonArea3{
+background:url(../../../images2/big_qx_bg.png);
+}
+/*************************************查询页面**************************************/
+.fplanListCheckDiv{
+margin-bottom:10px;
+margin-top:10px;
+}
+.fPlanListDiv{
+width:1585px;
+margin-top:10px;
+}
+.fPlanListTable{
+width:1585px;
+}
+.fPlanListTable tr{
+	height:35px;
+}
+.fPlanListTableTd{
+	width:300px;
+}
+.fplanListDivLine{
+border:1px #ccc solid;
+width:1585px;
+}
+.fplanListCheckButton{
+text-align:right;
+margin-top:8px;
+}
+/*****************************TODO  分页样式   暂时************************/
+.pageDiv{
+margin-top:5px;
+text-align:right;
+color:#fff;
+cursor:pointer;
+}

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project-module
+  type="WEB"
+  name="thyx"
+  id="myeclipse.1378775267205"
+  context-root="/thyx"
+  j2ee-spec="5.0"
+  archive="thyx.war">
+  <attributes>
+    <attribute name="webrootdir" value="web" />
+  </attributes>
+</project-module>
+

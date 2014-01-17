@@ -1,0 +1,44 @@
+/** 	<link href="../Axures.css" rel="stylesheet" type="text/css"/> */
+body {
+    margin: 0px;
+	background:#c6d8e2;
+}
+input{
+border:1px #ccc solid;
+}
+TEXTAREA{
+border:1px #ccc solid;
+}
+.button{
+border:none;!important;
+width:85px;
+color:#CCCCCC;!important;
+height:25px;!important;
+background:url(../../images/BT01.png) no-repeat;!important;
+text-align:center;!important;
+}
+.button:hover{
+border:none;!important;
+background:url(../../images/BT02.png) no-repeat;!important;
+}
+.button:visited{
+background:url(../../images/BT03.png) no-repeat;!important;
+}
+.buttonTo{
+border:none;!important;
+width:85px;
+color:#CCCCCC;!important;
+height:25px;!important;
+background:url(../../images/BT11.png) no-repeat;!important;
+text-align:center;!important;
+}
+.buttonTo:hover{
+border:none;!important;
+background:url(../../images/BT12.png) no-repeat;!important;
+}
+.buttonTo:visited{
+background:url(../../images/BT13.png) no-repeat;!important;
+}
+.checkBody{
+border:none;!important;
+}

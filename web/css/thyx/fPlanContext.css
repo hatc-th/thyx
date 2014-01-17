@@ -1,0 +1,259 @@
+/* CSS Document */
+/**********************表格共通css*******************/
+.inputTableDiv{
+/**border:1px red solid;*/
+width:700px;
+height:100px;
+margin-left:15px;
+}
+.inputTable{
+padding:0px;
+margin:0px;
+border-spacing:0px;
+border-collapse:collapse;
+caption-side:top;
+empty-cells:show;
+width:695px;
+/**border:1px red solid;*/
+}
+
+/**
+.radioClass {
+border:0px !important;
+width:20px !important;
+}*/
+.inputTable tr{
+color:#3e3e3e;
+height:30px;
+}
+.leftTd{
+text-align:right;
+}
+.rightTd{
+text-align:left;
+}
+.meterSpan{
+font-size:15px;
+}
+.selectText{
+border:1px #b0adaa solid;
+width:140px;
+color:#0C0C0C;
+}
+.selectTextTo{
+border:1px #b0adaa solid;
+width:130px;
+color:#0C0C0C;
+}
+.dateSelectText{
+border:1px #b0adaa solid;
+width:70px;
+color:#0C0C0C;
+}
+.timeSelectText{
+border:1px #b0adaa solid;
+width:65px;
+color:#0C0C0C;
+}
+.inputText{
+border:1px #b0adaa solid;
+width:150px;
+color:#3e3e3e;
+}
+.selectButton{
+padding:0px;
+margin:0px;
+width:10px;
+height:19px;
+border:0px #ccc solid;
+text-align:left;
+/**ackground:#15374A;*/
+background:url(../../images/button_xl2.PNG);
+}
+/*************一根线******************/
+.divLine{
+border:1px #ccc solid;
+width:680px;
+margin-left:15px;
+}
+/**********************航线列表*******************/
+.lineButtonDiv{
+margin-top:10px;
+width:700px;
+text-align:left;
+margin-left:15px;
+}
+.lineTableDiv{
+/**border:1px red solid;*/
+width:690px;
+margin-left:15px;
+height:162px;
+margin-top:5px;
+overflow:auto;
+}
+.lineTable{
+padding:0px;
+margin:0px;
+border-spacing:0px;
+border-collapse:collapse;
+caption-side:top;
+empty-cells:show;
+width:682px;
+}
+.lineTable td{
+height:20px;
+border:1px #ccc solid;
+}
+.lineTableTitle{
+background:#2c3a44;
+color:#fff !important;
+}
+/**********隔行换色************/
+.oneTdClass{
+color:#3e3e3e;
+background:#f5f5f5;
+}
+.twoTdClass{
+color:#3e3e3e;
+background:#ffffff;
+}
+/**********************航线控制按钮*******************/
+.LineButton{
+width:18px;
+height:18px;
+padding:0px;
+margin:0px;
+border:0px ;
+font-size:12px;
+text-align:center;
+cursor:pointer;
+}
+.mainLineButton{
+background:#868686;
+color:#FFFFFF;
+}
+.prepareLinButton{
+border:1px #ccc solid;
+background:#f4f4f4;
+color:#3e3e3e;
+}
+.changeLineButton{
+width:25px;
+height:21px;
+padding:0px;
+margin-left:10px;
+border:0px ;
+font-size:12px;
+text-align:center;
+background:url(../../images/changeLine.png);
+cursor:pointer;
+}
+.setupLineButton{
+width:80px;
+height:19px;
+padding:0px;
+padding-top:1px;
+margin-left:10px;
+border:0px #ccc solid;
+font-size:12px;
+text-align:center;
+background:url(../../images/lin_Button_bg.png);
+color:#3e3e3e;
+cursor:pointer;
+}
+.setupLineButton1{
+background:url(../../images/jyyy.png) !important;
+}
+.setupLineButton2{
+background:url(../../images/cyyy.png)!important;
+}
+.setupLineButton3{
+background:url(../../images/swcy.png)!important;
+}
+.setupLineButton4{
+background:url(../../images/tjbz.png)!important;
+}
+.setupLineButton5{
+background:url(../../images/scjh.png) !important;
+}
+.setupLineButton6{
+background:url(../../images/ctcx.png)!important;
+}
+.setupLineButton7{
+background:url(../../images/rollpage/page_FH.PNG)!important;
+}
+.setupLineButton8{
+background:url(../../images/rollpage/page_D1.PNG)!important;
+}
+.setupLineButton9{
+background:url(../../images/rollpage/page_S1.PNG)!important;
+}
+.setupLineButton10{
+background:url(../../images/rollpage/page_X1.PNG)!important;
+}
+.setupLineButton11{
+background:url(../../images/rollpage/page_Z1.PNG)!important;
+}
+.setupLineButton12{
+background:url(../../images/rollpage/page_F.PNG)!important;
+}
+.setupLineButton13{
+background:url(../../images/rollpage/page_S.PNG)!important;
+}
+.setupLineButton14{
+background:url(../../images/rollpage/page_HY.PNG)!important;
+}
+#isMainLine{
+color:#3e3e3e;
+}
+.setupLineDiv{
+padding-top:2px;
+height:18px;
+cursor:pointer;
+}
+
+/***********************其他信息******************************************/
+.textShowBorder {
+background:#fff;
+color:#0C0C0C;
+border:1px #b0adaa solid;
+width:138px;
+}
+
+.textNoBorder {
+border: 0px;
+color:#0C0C0C;
+width:140px;
+background:#f0f0f0;
+}
+.fPlanTextareaShowBorder{
+width:605px;
+border:1px #b0adaa solid;
+height:45px;
+background:#fff;
+color:#3e3e3e;
+overflow:auto;
+}
+.fPlanTextareaNoBorder{
+width:605px;
+border:1px #b0adaa solid;
+height:45px;
+background:#f0f0f0;
+color:#3e3e3e;
+overflow:auto;
+}
+.inputTableTo tr{
+color:#3e3e3e;
+height:22px;
+}
+.securityTableDiv{
+width:690px;
+margin-left:15px;
+height:116px;
+margin-top:5px;
+overflow:auto;
+}
+.securityButtonDiv{
+margin-left:5px;
+text-align:left;
+}

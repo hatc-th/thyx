@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
+
+<beans>
+
+	<!-- 系统字典服务 new -->
+	<bean id="codeService" parent="txProxyTemplate">
+		<property name="target">
+			<bean class="com.hatc.common.service.impl.CodeServiceImpl">
+				<property name="dao" ref="dao" />
+			</bean>
+		</property>
+	</bean>
+	
+	<!-- 系统日志服务 new -->
+	<bean id="logService" parent="txProxyTemplate">
+		<property name="target">
+			<bean class="com.hatc.common.service.impl.LogServiceImpl">
+				<property name="dao" ref="dao" />
+			</bean>
+		</property>
+	</bean>
+	
+	
+	<!-- 系统安全服务 new -->
+	<bean id="securityService" parent="txProxyTemplate">
+		<property name="target">
+			<bean class="com.hatc.common.service.security.impl.SecurityServiceImpl">
+				<property name="dao" ref="dao" />
+			</bean>
+		</property>
+	</bean>
+  
+</beans>

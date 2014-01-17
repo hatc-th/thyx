@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="GBK"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+
+	<bean id="adManager" parent="txProxyTemplate">
+		<property name="target">
+			<bean class="com.hatc.thyx.service.flyplan.impl.ADManagerImpl">
+            	<property name="dao" ref="dao" />
+			</bean>
+		</property>
+	</bean> 
+	
+	<bean id="flyConflictManager" parent="txProxyTemplate">
+		<property name="target">
+			<bean class="com.hatc.thyx.service.flyplan.impl.FlyConflictManagerImpl">
+            	<property name="dao" ref="dao" />
+			</bean>
+		</property>
+	</bean> 
+</beans>

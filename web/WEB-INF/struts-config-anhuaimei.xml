@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE struts-config 
+    PUBLIC "-//Apache Software Foundation//DTD Struts Configuration 1.2//EN" 
+    "http://struts.apache.org/dtds/struts-config_1_2.dtd">
+
+<struts-config>
+
+	<action-mappings>
+    	
+		<!-- 飞行计划审批管理 -->
+        <action path="/planAuditAction" type="com.hatc.thyx.web.planaudit.PlanAuditAction" parameter="method">
+            <forward name="searchList" path="/thyx/planaudit/planAuditManagerList.jsp" />
+            <forward name="auditInfo" path="/thyx/planaudit/planAuditModify.jsp" />
+            <forward name="flowDetail" path="/thyx/planaudit/flowList.jsp"/>
+            <forward name="queryList" path="/thyx/planaudit/planQueryList.jsp"/>
+            <forward name="planDetail" path="/thyx/planaudit/planInfoDetail.jsp"/>
+            <forward name="auditHistory" path="/thyx/planaudit/auditHistoryList.jsp"/>
+            <forward name="flyServiceInfo" path="/thyx/planaudit/flyServiceInfo.jsp"/>
+        </action>
+        <!-- 飞行计划状态管理（中止/激活） -->
+        <action path="/planSuspendAction" type="com.hatc.thyx.web.planaudit.PlanSuspendAction" parameter="method">
+            <forward name="searchList" path="/thyx/planaudit/planSuspendList.jsp" />
+            <forward name="statusInfo" path="/thyx/planaudit/planStatusInfo.jsp" />
+            <forward name="searchList_invalid" path="/thyx/planaudit/planInvalidManager.jsp" />
+        </action>
+	</action-mappings>
+    
+</struts-config>
+

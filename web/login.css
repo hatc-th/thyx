@@ -1,0 +1,119 @@
+/* CSS Document */
+a{
+text-decoration:none;
+}
+a img{
+border:0px;
+}
+ul{
+margin:0px;
+padding:0px;
+}
+ul li{
+margin:0px;
+padding:0px;
+}
+body{
+margin:0px;
+padding:0px;
+font-size:12px;
+font:"ËÎÌו";
+background:#174761;
+}
+/******************************************************/
+.globalDiv{
+text-align:center;
+width:99.5%;
+}
+.top_f_div{
+margin-top:8%;
+}
+.login_logo{
+width:726px;
+height:98px;
+margin-left:25%;
+background:url(images/login/bz.png);
+_background:url(images/login/bz.png);
+}
+.loginInputDiv{
+margin-bottom:15px;
+margin-left:35%;
+text-align:center;
+width:470px;
+height:164px;
+}
+.loginInputDivLeft{
+float:left;
+padding-top:30px;
+width:319px;
+height:132px;
+background:url(images/login/left_bj.png) no-repeat;
+}
+.leftInputDiv{
+width:216px;
+padding-left:50px;
+height:35px;
+}
+.loginInputDivLeft input{
+border:1px #3E7993 solid;
+background:#AEBEC7;
+height:18px;
+width:143px;
+}
+.leftInputDiv span{
+color:#D9E0E4;
+font-size:15px;
+font-weight:bold;
+}
+.yzmInput{
+width:80px !important;
+}
+.floatLeft{
+float:left;
+padding-top:2px;
+text-align:right;
+}
+.floatRight{
+float:right;
+}
+.floatRight img{
+padding-top:2px;
+margin-top:2px;
+border:1px #3E7993 solid;
+padding-bottom:2px;
+}
+.loginInputDivRight{
+float:right;
+width:146px;
+height:140px;
+background:url(images/login/right_bj.png) no-repeat;
+padding-top:26px;
+}
+.loginInputDivRight div{
+margin-top:15px;
+}
+.loginInputDivRight input{
+background:url(images/login/button.png);
+width:93px;
+color:#D9E0E4;
+font-size:14px;
+font-weight:bold;
+height:32px;
+border:1px #3E7993 solid;
+}
+.copyrightDiv{
+margin-top:4%;
+width:280px;
+color:#77B6BF;
+margin-left:41%;
+}
+.copyrightDiv span{
+font-size:25px;
+}
+.copyLeft{
+float:left;
+}
+.copyRight{
+padding-top:5px;
+float:right;
+}
