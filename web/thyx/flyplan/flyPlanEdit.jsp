@@ -33,6 +33,11 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
 <script type='text/javascript' src='<%=path %>/ad/jqueryPlus/autocomplete/js/jquery.autocomplete.js'></script><base>
 <!-- 地图操作需要引入的文件 -->
 <%@include file = "/gis/gis.inc"%>
+<!-- 三维模拟需要引入的文件 -->
+<script type="text/javascript" src="http://www.google.com/jsapi"></script>
+<script type="text/javascript" src="./earthview/js/math3d.js"></script>
+<script type="text/javascript" src="./earthview/js/plane.js"></script>
+<script type="text/javascript" src="./earthview/js/global.js"></script>
 
 <script type="text/javascript">
 
@@ -984,11 +989,46 @@ function clearGraphicInfoByCode() {
 			<input class="buttonArea1" id="saveBut" type="button" value="  保 存" onClick="ajaxSaveFlyPlan('11');"/>&nbsp;&nbsp;
 			<input class="buttonArea2" id="commitBut"  type="button" value="  提 交" onClick="ajaxSaveFlyPlan('12');" />&nbsp;&nbsp;
 			<input class="buttonArea3" type="button" value="  返 回" onClick="goBack();"/>
+			<input class="buttonArea3" type="button" value="  仿真" onClick="toggle3dDiv();"/>
 		</div>
 	</div>
 	</form>
 	<div id="jQueryCommonDiv"></div>
 </div>
+
+<div id='map3dControl' style="height: 20% ;width:100% ;float: left ;display:none;color: #ffffff;text-align: left;" >
+		
+		速度：<input type="input" style="width:50px;" value="100" id="speed"  readonly />
+		<input type="input" style="width:60px;" value="0" id="vel"  readonly />km/h
+		<input type="button" value="加速" onclick="changeSpeed(20);" />
+		<input type="button" value="减速" onclick="changeSpeed(-20);" />
+		<input type="button" value="舱内视角" onclick="changeSpeed(-20);" />
+		<input type="button" value="舱外视角" onclick="changeSpeed(-20);" />
+		<input type="button" value="左侧视角" onclick="changeSpeed(-20);" />
+		<input type="button" value="右侧视角" onclick="changeSpeed(-20);" />
+		<br/>
+		
+		高度<input type="input" style="width:60px;" value="0" id="height"  readonly />
+		<input type="button" value="上升" onclick="" />
+		<input type="button" value="下降" onclick="" />
+		
+		目标点：<input type="input" style="width:50px;" value="0" id="target"  readonly />
+		纬度<input type="input" style="width:60px;" value="0" id="targetLa"  readonly />
+		经度<input type="input" style="width:60px;" value="0" id="targetLo"  readonly />
+		
+		距离<input type="input" style="width:60px;" value="0" id="dis"  readonly />
+		朝向<input type="input" style="width:60px;" value="0" id="targetR"  readonly /><br/>
+		
+		<input type="button" value="go" onclick="go()" /> 
+			<input type="button" value="look at me" onclick="truck.cameraCut();" /> 
+			<input type="button" value="计算航线" onclick="prepareRoute();" />
+			<input type="button" value="toStartPos" onclick="moveToStart();" />
+			<input type="button" value="toTarget" onclick="moveToEnd();" />
+			<input type="button" value="Start" onclick="startPlane()" /> 
+			<input type="button" value="Stop" onclick="stopPlane()" /> <br/>
+			
+		<textarea type="input" rows="4" style="width: 800px;" id="inforBox" ></textarea>
+	</div>
 </body>
 <script type="text/javascript">
     // 初始化页面时，地图加载完成将航线在地图显示
