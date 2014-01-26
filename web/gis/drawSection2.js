@@ -136,6 +136,7 @@ function doGetSamples2(pline, planHeight,points,k,drawChart) {
 			var tempdist = 0, maxK;
 			d1 = new Date().getTime();
             console.log('d1='+d1);
+            planHeight = maxheights[0] + planHeight;
 			for (var k = 0; k < samples.length; k++) {
 				if (samplegeometryType == "esriGeometryMultipoint") {
 					tempdist = k;
@@ -183,6 +184,8 @@ function doGetSamples2(pline, planHeight,points,k,drawChart) {
 					});
 				}
 			}
+			//alert("planHeight"+planHeight);
+			//alert("maxpixelvalue"+maxpixelvalue);
 			if(planHeight > 0 && planHeight - maxpixelvalue < 600) { // 当飞行高度低于最高障碍600米时，报警
 				addAreaSpaceConflictData("rs_ob",planHeight - maxpixelvalue,samples[maxK].location);
 			}

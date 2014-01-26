@@ -12,12 +12,12 @@ dojo.require("dojox.charting.themes.Claro");
 var thegraphic;
 var samplegeometryType = "esriGeometryPolyline";
 
+//var layerUrl = "http://192.168.6.44:6080/arcgis/rest/services/hatc/GC02/ImageServer";
 var layerUrl = "http://192.168.1.20:6080/arcgis/rest/services/hatc/GC02/ImageServer";
-
-/*对外接口,根据点集合画剖面图.
+/*对外接口,根据点集合画剖面囄1�7.
  *参数points: 剖面图的线所使用的点集合
- *参数planHeight：计划中的飞行高度.
- *参数drawChart：0-不画刨面图，仅高度报警；else-画刨面图并高度报警
+ *参数planHeight：计划中的飞行高庄1�7.
+ *参数drawChart＄1�7不画刨面图，仅高度报警；else-画刨面图并高度报譄1�7
  */
 function gis_drawSection(points, planHeight, drawChart) {
 	//rz-----------------
@@ -176,11 +176,11 @@ function doGetSamples(pline, planHeight, drawChart) {
 				//samples[k]
 				var pt = new esri.geometry.Point(samples[k].location.x, samples[k].location.y, map.spatialReference);
 				
-				dx = sinvar*10;//经度方向偏移量（单位千米）
-				dy = cosvar*10;//纬度方向偏移量（单位千米）
-				var hd = samples[k].location.y*Math.PI/180.0;//角度转换为弧度
-				dx = dx/111.31955*(Math.cos(hd));//经度偏移值
-				dy = dy/111.31955;//纬度偏移值
+				dx = sinvar*10;//经度方向偏移量（单位千米＄1�7
+				dy = cosvar*10;//纬度方向偏移量（单位千米＄1�7
+				var hd = samples[k].location.y*Math.PI/180.0;//角度转换为弧庄1�7
+				dx = dx/111.31955*(Math.cos(hd));//经度偏移倄1�7
+				dy = dy/111.31955;//纬度偏移倄1�7
 				var pt1 = pt.offset(-dx,dy);
 				var pt2 = pt.offset(dx,-dy);
 				//var myJsonStr = '{"points":' + points + '}';

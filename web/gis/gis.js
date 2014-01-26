@@ -1,8 +1,6 @@
 /// <reference path="./jsapi_vsdoc10_v34.js" />
 
 dojo.require("esri.map");
-//dojo.require("dojo.json");
-///dojo.require("dojo._base_fx");
 dojo.require("esri.graphic");
 dojo.require("esri.toolbars.draw");
 dojo.require("esri.dijit.Scalebar");
@@ -10,13 +8,16 @@ dojo.require("esri.layers.FeatureLayer");
 dojo.require("esri.geometry");
 dojo.require("esri.tasks.identify");
 dojo.require("esri.tasks.query");
+dojo.require("esri.tasks.FindTask");
+dojo.require("esri.tasks.FindParameters");
 dojo.require("dijit.Menu");
 dojo.require("dijit.TooltipDialog");
 dojo.require("dijit.layout.ContentPane");
 dojo.require("dijit.layout.TabContainer");
 //dojo.require("dijit.registry");
 //dojo.require("dojo.base.connect");
-
+//dojo.require("dojo.json");
+///dojo.require("dojo._base_fx");
 var projectName = "/thyx";
 var map, toolbar, symbol, geomTask, infoTemplate, typhoonPathLayer;
 var pointQueryResult, lineDrawResult, mpJson, polyline;
@@ -128,14 +129,14 @@ function executePointQuery() {
 function executeAPQuery(searchText) {
 	map.setScale(500000);
 	//create find task with url to map service
-	//          findTask = new esri.tasks.FindTask("http://192.168.6.44:6080/arcgis/rest/services/City/Cities/MapServer");
-	findTask = new esri.tasks.FindTask(gis_host);
+	findTask = new esri.tasks.FindTask("http://192.168.1.20:6080/arcgis/rest/services/hatc/20131111/MapServer");
+	//var findTask = new esri.tasks.FindTask(gis_host);
 
 	//create find parameters and define known values
 	findParams = new esri.tasks.FindParameters();
 	findParams.returnGeometry = true;
 	//          findParams.layerIds = [0,1,2];
-	findParams.layerIds = [70];
+	findParams.layerIds = [44];
 	//发布图hatc2是70，发布图hatc是71
 	//          findParams.searchFields = ["CITY_NAME","NAME","SYSTEM","STATE_ABBR","STATE_NAME"];
 	findParams.searchFields = ["ICAO_CODE", "AD_NAME"];
@@ -228,7 +229,7 @@ function flickerElements(chartParam,elementParam){
 	findParams = new esri.tasks.FindParameters();
 	findParams.returnGeometry = true;
 	//          findParams.layerIds = [0,1,2];
-	findParams.layerIds = [70];
+	findParams.layerIds = [44];
 	//发布图hatc2是70，发布图hatc是71
 	//          findParams.searchFields = ["CITY_NAME","NAME","SYSTEM","STATE_ABBR","STATE_NAME"];
 	findParams.searchFields = ["ICAO_CODE", "AD_NAME"];
