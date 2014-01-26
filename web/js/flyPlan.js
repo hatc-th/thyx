@@ -498,9 +498,9 @@ function gisWriteNVInfo(arr){
    		pointIndex = pointIndex -1;
    	}
     //【目的机场距离最近则插入目的机场前】
-    if( wayType == '1' &&　pointIndex　>= parseInt( $('#linePointCount1').val() )　){
+    if( wayType == '1' &&pointIndex>= parseInt( $('#linePointCount1').val() )){
     	pointIndex = parseInt( $('#linePointCount1').val() );
-    }else if( wayType == '0' &&　pointIndex　>= parseInt( $('#linePointCount2').val() )　){
+    }else if( wayType == '0' &&pointIndex>= parseInt( $('#linePointCount2').val() )){
     	pointIndex = parseInt( $('#linePointCount2').val() );
     }
 	activeRow = pointIndex - 1 ;
@@ -1199,7 +1199,7 @@ function deleteSkyWay(wayType) {
 	    adep = document.getElementById("adep").value; // 起飞机场
 		ades = document.getElementById("ades").value; // 目的机场
 	
-    	if(adep != '' &&　ades　!= ''){
+    	if(adep != '' &&ades!= ''){
     		
 	    	 // 重新插入目的机场行
 		    newTr = tableObj.insertRow(2);  //表示加入到第几行，编号从0开始	
@@ -1650,7 +1650,7 @@ function getPointNumInfo(rsPPos,formatType){
 	wd=temp1+temp2+temp3+temp4;
 	jd=temp5+temp6+temp7+temp8;
 	if(formatType !=null && formatType == '2'){  // 三维使用格式，纬度在前
-		return '['+wd+','+jd+']';
+		return [wd,jd];
 	}
 	return '['+jd+','+wd+']'; // 二维使用格式，经度在前
 } 
@@ -1754,7 +1754,7 @@ function onLoadGisLine(){
 
 
 // 2014-01-25 日添加，定义全局变量用于三维飞行
-coordinateLine='';  // 三维飞行航线点坐标
+coordinateLine=[];  // 三维飞行航线点坐标
 flyHignt='';  // 三维飞行航线高度
 
 /***
@@ -1772,19 +1772,20 @@ function reDrawLineSection(wayType){
 	}
 	skWay1='';
  	skWay2='';
- 	coordinateLine1='';
- 	coordinateLine2='';
+ 	coordinateLine1=[];
+ 	coordinateLine2=[];
  	var fPlanRightBottomContext = document.getElementById("fPlanRightBottomContext");
  	document.getElementById('chartNode').style.width = fPlanRightBottomContext.offsetWidth-25+"px";
  	document.getElementById('chartNode').style.height = fPlanRightBottomContext.offsetHeight +"px";
  	for (i=0;i<document.form1.elements.length;i++){
 	    if (document.form1.elements[i].name=="rs_PPosBak"){ 
 	    		skWay1=skWay1+getPointNumInfo(document.form1.elements[i].value,'1')+",";   
-	    		coordinateLine1 = coordinateLine1 + getPointNumInfo(document.form1.elements[i].value,'2')+",";  
+	    		
+	    		coordinateLine1[coordinateLine1.length] = getPointNumInfo(document.form1.elements[i].value,'2');  
 	    }
 	    if (document.form1.elements[i].name=="rs_PPosMain"){
 	    		skWay2=skWay2+getPointNumInfo(document.form1.elements[i].value,'1')+",";	
-	    		coordinateLine2 =coordinateLine2 + getPointNumInfo(document.form1.elements[i].value,'2')+",";	
+	    		coordinateLine2[coordinateLine2.length] = getPointNumInfo(document.form1.elements[i].value,'2'); 
 	    }
 	}
  	if( (wayType =='1' && document.getElementById('lineFlag').value == '0')  // 显示主航线刨面图，当前 lineTableDiv2 层表示的主航线
