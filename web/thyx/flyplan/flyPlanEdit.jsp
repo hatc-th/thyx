@@ -33,11 +33,6 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
 <script type='text/javascript' src='<%=path %>/ad/jqueryPlus/autocomplete/js/jquery.autocomplete.js'></script><base>
 <!-- 地图操作需要引入的文件 -->
 <%@include file = "/gis/gis.inc"%>
-<!-- 三维模拟需要引入的文件 -->
-<script type="text/javascript" src="http://www.google.com/jsapi"></script>
-<script type="text/javascript" src="./earthview/js/math3d.js"></script>
-<script type="text/javascript" src="./earthview/js/plane.js"></script>
-<script type="text/javascript" src="./earthview/js/global.js"></script>
 
 <script type="text/javascript">
 
@@ -79,6 +74,7 @@ $(document).ready(function() {
 			document.getElementById("adepPos").value = data[4];
 			addAdepOrAdesToLine('1');
 			reFreshGisLine();
+			getDateDiff();
 		}
 	});
 	
@@ -106,6 +102,7 @@ $(document).ready(function() {
 			document.getElementById("adesPos").value = data[4];
 			addAdepOrAdesToLine('2');
 			reFreshGisLine();
+			getDateDiff();
 		}
 	});
 	
@@ -165,6 +162,7 @@ function setADInfo(flag,object) {
 			document.getElementById("adepPos").value = object.pos;
 			addAdepOrAdesToLine('1');
 			reFreshGisLine();
+			getDateDiff();
 		}
 		
 	}else if(flag == '2'){
@@ -175,6 +173,7 @@ function setADInfo(flag,object) {
 			document.getElementById("adesPos").value = object.pos;
 			addAdepOrAdesToLine('2');
 			reFreshGisLine();
+			getDateDiff();
 		}
 		
 	}else {
@@ -424,6 +423,15 @@ function clearGraphicInfoByCode() {
 	function highLightPoint(ICAO,id,from){
 		// serachThenWink(ICAO);
 	}
+	
+	function changerTime1(thes1,thes2){
+		alert(13);
+		thes2.value= thes1+'1';
+	}
+	function changerTime2(thes1,thes2){
+		alert(12);
+		thes2.value= thes1+'2';
+	}
 		
 </script>
 
@@ -500,11 +508,11 @@ function clearGraphicInfoByCode() {
 							<tr>
 								<td class="leftTd">起飞时间：</td>
 								<td class="rightTd">
-									<input type="text" class="dateSelectText" name="dates" id="dates" value='<fmt:formatDate value="${tFpl.dates}"  pattern="yyyy-MM-dd"/>' onFocus="syjDate(this)" onpropertychange="getDateDiff();setEmpSetal();" />：<input type="text" class="timeSelectText" name="setd" id="setd" value="${tFpl.setd}" onFocus="syjTime(this)" onpropertychange="getDateDiff();" />
+									<input type="text" class="dateSelectText" name="dates" id="dates" value='<fmt:formatDate value="${tFpl.dates}"  pattern="yyyy-MM-dd"/>' onFocus="syjDate(this)" onpropertychange="getDateDiff()"/>：<input type="text" class="timeSelectText" name="setd" id="setd" value="${tFpl.setd}" onFocus="syjTime(this)" onpropertychange="getDateDiff()"/>
 								</td>
-								<td class="leftTd">降落时间：</td>
+								<td class="leftTd">飞行速度：</td>
 								<td class="rightTd">
-									<input type="text" class="dateSelectText" name="setal" id="setal" value='<fmt:formatDate value="${tFpl.setal}"  pattern="yyyy-MM-dd"/>' onFocus="syjDate(this)" onpropertychange="getDateDiff();" />：<input type="text" class="timeSelectText" name="seta" id="seta" value="${tFpl.seta}" onFocus="syjTime(this)" onpropertychange="getDateDiff();" />
+									<input type="text" class="selectTextTo" name="cspd" id="cspd" value="${tFpl.cspd}" onpropertychange="getDateDiff()" ><span>km/h</span>
 								</td>
 								<td class="leftTd">飞行高度：</td>
 								<td class="rightTd">
@@ -512,10 +520,11 @@ function clearGraphicInfoByCode() {
 								</td>
 							</tr>
 							<tr>
-								<td class="leftTd">飞行速度：</td>
+								<td class="leftTd">降落时间：</td>
 								<td class="rightTd">
-									<input type="text" class="selectTextTo" name="cspd" id="cspd" value="${tFpl.cspd}"><span>km/h</span>
+									<input type="text" class="dateSelectText" name="setal" id="setal" value='<fmt:formatDate value="${tFpl.setal}"  pattern="yyyy-MM-dd"/>' readonly />：<input type="text" class="timeSelectText" name="seta" id="seta" value="${tFpl.seta}" readonly />
 								</td>
+								
 								<td class="leftTd">飞行规则：</td>
 								<td class="rightTd">
 									<c:forEach var="item" items="${flyRuleList}">
@@ -989,46 +998,11 @@ function clearGraphicInfoByCode() {
 			<input class="buttonArea1" id="saveBut" type="button" value="  保 存" onClick="ajaxSaveFlyPlan('11');"/>&nbsp;&nbsp;
 			<input class="buttonArea2" id="commitBut"  type="button" value="  提 交" onClick="ajaxSaveFlyPlan('12');" />&nbsp;&nbsp;
 			<input class="buttonArea3" type="button" value="  返 回" onClick="goBack();"/>
-			<input class="buttonArea3" type="button" value="  仿真" onClick="toggle3dDiv();"/>
 		</div>
 	</div>
 	</form>
 	<div id="jQueryCommonDiv"></div>
 </div>
-
-<div id='map3dControl' style="height: 20% ;width:100% ;float: left ;display:none;color: #ffffff;text-align: left;" >
-		
-		速度：<input type="input" style="width:50px;" value="100" id="speed"  readonly />
-		<input type="input" style="width:60px;" value="0" id="vel"  readonly />km/h
-		<input type="button" value="加速" onclick="changeSpeed(20);" />
-		<input type="button" value="减速" onclick="changeSpeed(-20);" />
-		<input type="button" value="舱内视角" onclick="changeSpeed(-20);" />
-		<input type="button" value="舱外视角" onclick="changeSpeed(-20);" />
-		<input type="button" value="左侧视角" onclick="changeSpeed(-20);" />
-		<input type="button" value="右侧视角" onclick="changeSpeed(-20);" />
-		<br/>
-		
-		高度<input type="input" style="width:60px;" value="0" id="height"  readonly />
-		<input type="button" value="上升" onclick="" />
-		<input type="button" value="下降" onclick="" />
-		
-		目标点：<input type="input" style="width:50px;" value="0" id="target"  readonly />
-		纬度<input type="input" style="width:60px;" value="0" id="targetLa"  readonly />
-		经度<input type="input" style="width:60px;" value="0" id="targetLo"  readonly />
-		
-		距离<input type="input" style="width:60px;" value="0" id="dis"  readonly />
-		朝向<input type="input" style="width:60px;" value="0" id="targetR"  readonly /><br/>
-		
-		<input type="button" value="go" onclick="go()" /> 
-			<input type="button" value="look at me" onclick="truck.cameraCut();" /> 
-			<input type="button" value="计算航线" onclick="prepareRoute();" />
-			<input type="button" value="toStartPos" onclick="moveToStart();" />
-			<input type="button" value="toTarget" onclick="moveToEnd();" />
-			<input type="button" value="Start" onclick="startPlane()" /> 
-			<input type="button" value="Stop" onclick="stopPlane()" /> <br/>
-			
-		<textarea type="input" rows="4" style="width: 800px;" id="inforBox" ></textarea>
-	</div>
 </body>
 <script type="text/javascript">
     // 初始化页面时，地图加载完成将航线在地图显示
@@ -1037,11 +1011,10 @@ function clearGraphicInfoByCode() {
 		
 		dojo.connect(toolbar, "onDrawEnd", addToMap);
 		
-		getPointInfoByCode(dojo.byId('adepCode').value);
-		getPointInfoByCode(dojo.byId('adesCode').value);
-		getPointInfoByCode(dojo.byId('altn1Code').value);
+// 		getPointInfoByCode(dojo.byId('adepCode').value);
+// 		getPointInfoByCode(dojo.byId('adesCode').value);
+// 		getPointInfoByCode(dojo.byId('altn1Code').value);
 		onLoadGisLine();
-		
 	}
 </script>
 </html>

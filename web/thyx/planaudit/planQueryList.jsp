@@ -178,7 +178,7 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
     </script>
 	
 	</head>
-	<body onload="resetSize();" onresize="resetSize();">
+	<body onclick=syjDTclick() onkeyup=syjDTkeyup() onload="resetSize();" onresize="resetSize();">
 	<div class="globalDiv">
 		<div class="navText">
 			飞行计划审批&nbsp;》飞行计划查询列表

@@ -458,4 +458,37 @@ public class FlyPlanAction extends BaseAction {
 		return null;
     }
 	
+	/**
+	 * 获取从机场选中的机场对应的数据库中的ID
+	 * @param mapping
+	 * @param form
+	 * @param request
+	 * @param response
+	 * @return
+	 * @throws Exception
+	 */
+	public ActionForward getAdIdInfo(ActionMapping actionMapping, BaseForm form, HttpServletRequest request, HttpServletResponse response) throws Exception {
+		// 定义业务流
+		ActionDispose actionDispose = new ExecuteProcess();
+		// 解析Request 请求
+		RequestMap map = new RequestMap();
+		Map mapinfo = new HashMap();
+		BeanValue value = new BeanValue();
+		try {
+			// 使用依赖注入来配置对象
+			map = actionDispose.initRequest(request, servlet);
+			FlyPlanManager flyPlanManager = (FlyPlanManager) getBean("flyPlanManager");
+			value=flyPlanManager.getAdIdInfo(map);
+			mapinfo.put("returnflag","true");
+			// 操作对象的主键Key
+			mapinfo.put("adId",value.getRequestMap("adId"));
+			
+			// 成功提示页
+		} catch (Exception e) {
+			mapinfo.put("returnflag","false");
+		}	
+		this.ajaxReturn((Object)mapinfo,response);		
+		return null;
+    }
+	
 }

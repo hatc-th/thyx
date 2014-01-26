@@ -13,5 +13,14 @@
             	<property name="dao1" ref="dao1" />
 			</bean>
 		</property>
-	</bean> 
+	</bean>
+	
+	<!-- 飞行计划实施管理 -->
+	<bean id="actFlyPlanManager" parent="txProxyTemplate">
+        <property name="target">
+            <bean class="com.hatc.thyx.service.actflyplan.impl.ActFlyPlanManagerImpl">
+                <property name="dao" ref="dao" />
+            </bean>
+        </property>
+    </bean>
 </beans>

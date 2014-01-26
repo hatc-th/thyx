@@ -37,23 +37,25 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
 
 <script type="text/javascript">
 
-	$(document).ready(function() {
+$(document).ready(function() {
 
-		$(".divShowScroll").niceScroll(
-			{
-				touchbehavior:false,
-				cursorcolor:"#ccc",
-				cursoropacitymax:0.7,
-				cursorwidth:5,
-				cursorborder:"1px solid #ccc",
-				cursorborderradius:"8px",
-				background:"#143347",
-				autohidemode:false
-			}
-		); 
-	});
+	$(".divShowScroll").niceScroll(
+		{
+			touchbehavior:false,
+			cursorcolor:"#ccc",
+			cursoropacitymax:0.7,
+			cursorwidth:5,
+			cursorborder:"1px solid #ccc",
+			cursorborderradius:"8px",
+			background:"#143347",
+			autohidemode:false
+		}
+	); 
+	
+	showConflict();		
+});
 
-	//显示冲突信息
+//显示冲突信息
 	var rowIndex = 1;
 	function showConflict(){
 		var adep = $('#adep').val();
@@ -64,7 +66,28 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
 		var depICAO = $('#adepCode').val();
 		var desICAO = $('#adesCode').val();
 		var planeType = $('#acft').val();
-
+		
+		if( !checkFlyPlanFormInfo() ){
+			return ;
+		}
+		if( !checkElementFilled('acft','请选择飞行器类型!') ){
+			return ;
+		}
+		var removeRow = $('#flyConflictTbl tr[src="db"]');
+		$.each(removeRow,function(){
+			$(this).removeAttr('icao');
+			$(this).removeAttr('src');
+			if($(this).index() > 5){
+				$(this).remove();
+			}else{
+				$(this).children('td').html('');
+			}
+			rowIndex--;
+		});
+		var tbl = $('#flyConflictTbl');
+		var desRow = null;
+		var curClass = '';
+		
 		$.ajax({
 			url:'<%=path%>/flyConflictAction.do?op=getFlyConflictInfo',
 			data:{
@@ -79,111 +102,39 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
 			dataType:'json',
 			async:false,
 			success:function(data){
-			
-	    		document.getElementById("conflict").style.display="block";
-	    		document.getElementById("conflictBut").className="TabSecurityButton mainLineButton";
-	    		
-				document.getElementById("metar").style.display="none";
-				document.getElementById("metarBut").className="TabSecurityButton prepareLinButton";
-				document.getElementById("sigmet").style.display="none";
-				document.getElementById("sigmetBut").className="TabSecurityButton prepareLinButton";
-				document.getElementById("notam").style.display="none";
-				document.getElementById("notamBut").className="TabSecurityButton prepareLinButton";
-				
 				var ICAO = "";
 				var depPOS = "";
 				var desPOS = "";
-				// 机场关闭
-				var depClosedConflict="";
-				// 能见度
-				var depVisibilityConflict="";
-				// 风速冲突分析
-				var depWindspeedConflict="";
-				// 分析起飞机场在同一时间是否有别的飞行计划
-				var adepTimeConflict="";
 				$.each(data,function(index,entry){
+						desRow = createConflictRow(rowIndex);
+						desRow.attr('id',entry.id);
+						desRow.attr('from',entry.from);
+						desRow.attr('src','db');//数据来源【地图，数据库】
+						if(rowIndex > 5){
+							desRow.appendTo(tbl);
+						}
+						desRow.dblclick(function(){
 						ICAO = entry.src;
-
-						if(entry.type=="机场关闭"){
-							if(depClosedConflict.indexOf(entry.type) != 0) {
-								depClosedConflict=depClosedConflict + entry.type + ":";
-							}
-							depClosedConflict = depClosedConflict + entry.startTime + '到' + entry.endTime + entry.description + ';';
-						}
-						if(entry.type=="能见度低"){
-							if(depVisibilityConflict.indexOf(entry.type) != 0) {
-								depVisibilityConflict=depVisibilityConflict + entry.type + ":";
-							}
-							depVisibilityConflict = depVisibilityConflict + entry.startTime + '到' + entry.endTime + entry.description + ';';
-						}
-						if(entry.type=="逆风超速"){
-							if(depWindspeedConflict.indexOf(entry.type) != 0) {
-								depWindspeedConflict=depWindspeedConflict + entry.type + ":";
-							}
-							depWindspeedConflict = depWindspeedConflict + entry.startTime + '到' + entry.endTime + entry.description + ';';
-						}
-						if(entry.type=="起飞时间冲突"){
-							if(adepTimeConflict.indexOf(entry.type) != 0) {
-								adepTimeConflict=adepTimeConflict + entry.type + ":";
-							}
-							adepTimeConflict = adepTimeConflict + entry.startTime + '到' + entry.endTime + entry.description + ';';
-						}
+						switch(ICAO){
+							case "depICAO":
+							highLightPoint(depICAO,entry.id,entry.from);//根据机场名称或者是代码定位
+							break;
+							
+							case "desICAO":
+							highLightPoint(desICAO,entry.id,entry.from);
+							break;
+						}	
+						});
+	
+						desRow.children('td').eq(0).html(rowIndex);
+						desRow.children('td').eq(1).html(entry.type);
+						desRow.children('td').eq(2).html(entry.description);
+						desRow.children('td').eq(3).html(entry.startTime + ' 到 ' + entry.endTime);
+						rowIndex++;
 				});
-				var result = "";
-				if(depClosedConflict != ""){
-					result = result + depClosedConflict+'\r\n';
-				}
-				if(depVisibilityConflict != ""){
-					result = result + depVisibilityConflict+'\r\n';
-				}
-				if(depWindspeedConflict != ""){
-					result = result + depWindspeedConflict+'\r\n';
-				}
-				if(adepTimeConflict != ""){
-					result = result + adepTimeConflict+'\r\n';
-				}
-				if(document.getElementById("areaSpace").value != ""){
-					result = result + document.getElementById("areaSpace").value+'\r\n';
-				}
-				if(document.getElementById("heightConfilct").value != ""){
-					result = result + document.getElementById("heightConfilct").value+';\r\n';
-				}
-				/*$('#flyConflictTbl tr[id="conflict"]').children('td').eq(1).html('<textarea  class="fPlanTextareaNoBorder2"  id="notes4" name="notes4" readonly="readonly">'
-					+result.substr(0,result.lastIndexOf('\r\n'))+'</textarea>');*/
-				document.getElementById("notes4").value = result.substr(0,result.lastIndexOf('\r\n'));
-			},
-			error:function(){
-				showConfirmDiv(2,'安全提示查询失败!','操作提示信息');
 			},
 		});
-	}
-	
-	/**
-		添加空域冲突数据
-		@param conflictType 冲突类型
-		@param conflictReason 冲突原因
-		@param icao  编码，用于高亮地图中某点
-	*/
-	function addAreaSpaceConflictData(conflictType,conflictReason,icao){
-	
-		if(conflictType == 'rs_as'){
-			if(conflictReason=='1'){
-				conflictReason = "主航线穿过禁区"+icao;
-			}else{
-				conflictReason = "备航线穿过禁区"+icao;
-			}
-			if(document.getElementById("areaSpace").value != ''){
-				document.getElementById("areaSpace").value=document.getElementById("areaSpace").value +conflictReason+";";
-			}else {
-				document.getElementById("areaSpace").value="空域冲突:" + conflictReason +";";
-			}
-		}else{
-			if( $('#bakHeight').val() ==0 || parseInt($('#bakHeight').val(),10) > parseInt(conflictReason,10)){
-				$('#bakHeight').val(parseInt(conflictReason,10));
-			}
-			var reason = "航线高度低于安全超障高度，建议调整航线高度到"+ [parseInt($('#chgt').val())+parseInt(600,10)-parseInt($('#bakHeight').val(),10)]+"米";
-			document.getElementById("heightConfilct").value="安全高度告警:" + reason;
-		}
+		$(".divShowScroll")[2].autohidemode = false;
 	}
 	
 	/*
@@ -192,60 +143,160 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
 		@param lineType 航线类型
 	*/
 	function removeAreaSpaceConflictData(conflictType,lineType){
-		if(conflictType == 'rs_as'){
-			document.getElementById("areaSpace").value="";
-		}else{
-			document.getElementById("heightConfilct").value="";
+		var row;
+		if(conflictType == "rs_as"){ 
+			row = $('#flyConflictTbl tr[icao="'+lineType+'"]');
+		} else if(conflictType == "rs_ob"){
+			row = $('#flyConflictTbl tr[src="rs_ob"]');
 		}
-	}
-	// 返回处理
-	function goBack() {
-	    showConfirmDiv(1,'您确定要退出吗？','提示信息',function(choose){
-		  	if(choose=="yes"){
-				document.form1.action='<c:url value="/planAuditAction.do?method=searchList" />' ;
-				document.form1.submit();
-			}else{
-				return;
-			}
+		$.each(row,function(){
+			$(this).removeAttr('icao');
+			$(this).removeAttr('src');
+			$(this).remove();
+			rowIndex--;
 		});
+		resetLineIndex();
 	}
 	
+	//生成冲突分析的table行
+	function createConflictRow(rowIndex){
+		var desRow = null;
+		if(rowIndex%2  == 1){
+			curClass = "oneTdClass";	
+		}else{
+			curClass = "twoTdClass";
+		}
+		
+		if(rowIndex > 5){
+			desRow = $('#flyConflictTbl tr:first').clone();
+			desRow.addClass(curClass).removeClass('lineTableTitle');
+		}else{
+			desRow = $('#flyConflictTbl tr').eq(rowIndex);
+		}
+		desRow.children('td').eq(2).attr("style","text-align:left");
+		return desRow;
+	}
+	
+	/*
+		添加空域冲突数据
+		@param conflictType 冲突类型
+		@param conflictReason 航线类型
+		@param icao  编码，用于高亮地图中某点
+	*/
+	function addAreaSpaceConflictData(conflictType,conflictReason,icao){
+		
+		var tbl = $('#flyConflictTbl');
+		var selector;
+		
+		if(conflictType == "rs_as"){
+			selector = '#flyConflictTbl tr[icao="' + icao + conflictReason + '"]';
+		}else{
+			removeAreaSpaceConflictData("rs_ob");
+			if( $('#bakHeight').val() ==0 || parseInt($('#bakHeight').val(),10) > parseInt(conflictReason,10)){
+				$('#bakHeight').val(parseInt(conflictReason,10));
+			}
+			selector = '#flyConflictTbl tr[src="' + conflictType + '"]';
+		}
+
+		if($(selector).length == 0){
+			desRow = createConflictRow(rowIndex);
+			if(conflictType == "rs_as"){
+				desRow.attr('src','rs_as');//标示冲突类型
+				conflictValue="空域冲突";
+				if(conflictReason =='1'){
+					reason = "主航线穿过禁区"+icao;
+				}else{
+					reason = "备航线穿过禁区"+icao;
+				}
+				/**
+				desRow.dblclick(function(){
+					serachThenWink(icao);
+				});**/
+			}else {
+				desRow.attr('src','rs_ob');//标示冲突类型
+				conflictValue="安全高度告警";
+				reason = "航线高度低于安全超障高度，建议调整航线高度到";
+				reason = reason + [parseInt($('#chgt').val(),10)+parseInt(600,10)-parseInt($('#bakHeight').val(),10)]+"米";
+				
+			}
+			if(rowIndex > 5){
+				desRow.appendTo(tbl);
+			}
+			desRow.attr('icao',conflictReason);
+			desRow.children('td').eq(0).html(rowIndex);
+			desRow.children('td').eq(1).html(conflictValue);
+			desRow.children('td').eq(2).html(reason);
+			desRow.children('td').eq(3).html('');
+			
+			rowIndex++;
+		}
+		$(".divShowScroll")[2].autohidemode = false;
+	}
+	/*
+	 * 重置样式和行数不足4行时补空白行
+	 */
+	function resetLineIndex(){
+		var newRow = $('#flyConflictTbl tr');
+		$.each(newRow,function(){
+			if($(this).index() > 0 ){
+				if($(this).index()%2  == 1){
+					curClass = "oneTdClass";	
+				}else{
+					curClass = "twoTdClass";
+				}
+				$(this).attr("class",curClass);
+				if($(this).index() < rowIndex){
+					$(this).children('td').eq(0).html($(this).index());
+				}
+			}
+		});
+		
+		// 如果表格中的行数不足4行时补空白行
+		var len = $('#flyConflictTbl tr').length;  
+		for(var m=len-1 ;m<5;m++){  // 因为表头占一行，所以要-1
+			if(m%2  == 0){
+				curClass = "oneTdClass";	
+			}else{
+				curClass = "twoTdClass";
+			}
+			desRow = $('#flyConflictTbl tr:first').clone();
+			desRow.attr("class",curClass);
+			desRow.children('td').html('');
+			desRow.appendTo($('#flyConflictTbl'));
+		}
+	}
 	//地图上加亮显示
 	function highLightPoint(ICAO,id,from){
-		serachThenWink(ICAO);
+		// serachThenWink(ICAO);
+	}
+	
+	function goBack(){
+		document.form1.action='<c:url value="/ActFlyPlanAction.do?method=queryActFlyPlanList&selectFlag=${selectFlag}"/>' ;
+		document.form1.submit();
 	}
 </script>
 
 </head>
-<body onclick=syjDTclick() onkeyup=syjDTkeyup() onload="resetSize1();" onresize="resetSize1();">
+<body onload="resetSize1();" onresize="resetSize1();">
 <div id="globalDiv" class="globalDiv">
 	<div class="navText">
-		飞行计划查询&nbsp;》飞行服务讲解
+		飞行计划查询&nbsp;》飞行计划查看
 	</div>
 	<form method="post" name="form1" id="form1">
 		
-		<!-- 保存查询页面的查询条件用 -->
-		<input id="flyPlanKind" name="flyPlanKind" type="hidden" value="${flyPlanKind}"/>
-		<input id="planCode" name="planCode" type="hidden" value="${planCode}" />
 		<input id="planName" name="planName" type="hidden" value="${planName}" />
-		<input id="pilot" name="pilot" type="hidden" value="${pilot}"/>
-		<input id="flyPlanAdep" name="flyPlanAdep" type="hidden" value="${flyPlanAdep}" />
-		<input id="flyPlanAdes" name="flyPlanAdes" type="hidden" value="${flyPlanAdes}" />
-		<input id="flyPlanAdepName" name="flyPlanAdepName" type="hidden" value="${flyPlanAdepName}" />
-		<input id="flyPlanAdesName" name="flyPlanAdesName" type="hidden" value="${flyPlanAdesName}" />
-		<input id="planStatus" name="planStatus" type="hidden" value="${planStatus}" />
-		<input id="startDate" name="startDate" type="hidden" value="${startDate}" />
-		<input id="endDate" name="endDate" type="hidden" value="${endDate}" />
+		<input id="planCode" name="planCode" type="hidden" value="${planCode}" />
+		<input id="startDate" name="startDate" type="hidden" value="${flyStartDate}" />
+		<input id="endDate" name="endDate" type="hidden" value="${flyEndDate}" />
+		<input id="airCraftType" name="airCraftType" type="hidden" value="${airCraftType}" />
+		<input id="adepName" name="adepName" type="hidden" value="${adep}" />
+		<input id="adesName" name="adesName" type="hidden" value="${ades}" />
 		<input id="qDate" name="qDate" type="hidden" value="${qDate}" />
-		<input type="hidden" id="managerType" name="managerType" value="${managerType}"/>
+		<input type="hidden" id="selectFlag" name="selectFlag" value="${selectFlag}"/>
         <input type="hidden" id="page" name="page" value="${page}"/>
 		<input type="hidden" id="pageBool" name="pageBool" value="${pageBool}"/>
-		
-		<input type="hidden" id="planid" name="planid" value="${tFpl.planid}"/>
-		<!-- 用于保存空域冲突 -->
-		<input type="hidden" id="areaSpace" name="areaSpace" value=""/>
-		<input type="hidden" id="heightConfilct" name="heightConfilct" value=""/>
 		<input type="hidden" id="bakHeight" name="bakHeight" value="0"/>
+		
 	<div class="fPlanContext">
 		<!--==========================================================文本信息=========================================================================-->
 		<div id="fPlanContextText" class="fPlanContextText">
@@ -254,32 +305,31 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
 				<!--==========设置上面圆角start===========-->
 				<div class="titleLeftRound">
 					<div class="roundLeft leftRound">
-							<div class="roundLeftLeft"><img src="images2/left_Context_yj1.png" /></div>
-							<div class="topRoundLeftRight"><div class="roundTitle">飞行计划</div><div class="roundTitleRight"></div></div>
-				  </div>
-						<div class="roundRight"><img src="images2/left_Context_yj2.png" /></div>
+						<div class="roundLeftLeft"><img src="images2/left_Context_yj1.png" /></div>
+						<div class="topRoundLeftRight"><div class="roundTitle">飞行计划</div><div class="roundTitleRight"></div></div>
+				  	</div>
+					<div class="roundRight"><img src="images2/left_Context_yj2.png" /></div>
 				</div>
 				<!--==========设置上面圆角end===========-->
-				
 				<div class="fPlanLeftTopContext">
 					<div class="inputTableDiv">
 						<table class="inputTable">
 							<tr>
 								<td class="leftTd">起飞机场：</td>
 								<td class="rightTd">
-									<input type="text" class="textNoBorder" value="${tFpl.adepName}" readonly="readonly"/>
+									<input type="text" class="textNoBorder" value="${tFpl.adepName}" readonly/>
 									<input type="hidden" class="selectText" name="adep" id="adep" value="${tFpl.adep}"/>
 									<input type="hidden" class="selectText" name="adepCode" id="adepCode" value="${tFpl.adepCode}" />
 								</td>
 								<td class="leftTd">目的机场：</td>
 								<td class="rightTd">
-									<input type="text" class="textNoBorder" value="${tFpl.adesName}" readonly="readonly"/>
+									<input type="text" class="textNoBorder" value="${tFpl.adesName}" readonly/>
 									<input type="hidden" class="selectText" name="ades" id="ades" value="${tFpl.ades}"/>
 									<input type="hidden" class="selectText" name="adesCode" id="adesCode" value="${tFpl.adesCode}"/>
 								</td>
 								<td class="leftTd">备用机场：</td>
 								<td class="rightTd">
-									<input type="text" class="textNoBorder" value="${tFpl.altn1Name}" readonly="readonly"/>
+									<input type="text" class="textNoBorder" value="${tFpl.altn1Name}" readonly/>
 	           						<input type="hidden" name="altn1Code" id="altn1Code" value="${tFpl.altn1Code}"/>
 								</td>
 							</tr>
@@ -288,28 +338,28 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
 								<td class="rightTd">
 									<input type="hidden" class="selectText" name="dates" id="dates" value="<fmt:formatDate value="${tFpl.dates}"  pattern="yyyy-MM-dd"/>"/>
 									<input type="hidden" class="selectText" name="setd" id="setd" value="${tFpl.setd}"/>
-									<input type="text" class="textNoBorder" value="<fmt:formatDate value="${tFpl.dates}"  pattern="yyyy-MM-dd"/> ${tFpl.setd}" readonly="readonly"/>
+									<input type="text" class="textNoBorder" value="<fmt:formatDate value="${tFpl.dates}"  pattern="yyyy-MM-dd"/> ${tFpl.setd}" readonly/>
 								</td>
 								<td class="leftTd">降落时间：</td>
 								<td class="rightTd">
-									<input type="hidden" class="selectText" name="setal" id="setal" value="<fmt:formatDate value="${tFpl.setal}"  pattern="yyyy-MM-dd"/>"/>
+									<input type="hidden" class="selectText" name="setal" id="setal" value="<fmt:formatDate value="${tFpl.setal}"  pattern="yyyy-MM-dd"/>" />
 									<input type="hidden" class="selectText" name="seta" id="seta" value="${tFpl.seta}"/>
-									<input type="text" class="textNoBorder" value="<fmt:formatDate value="${tFpl.setal}"  pattern="yyyy-MM-dd"/> ${tFpl.seta}" readonly="readonly"/>
+									<input type="text" class="textNoBorder" value="<fmt:formatDate value="${tFpl.setal}"  pattern="yyyy-MM-dd"/> ${tFpl.seta}" readonly />
 								</td>
 								<td class="leftTd">飞行高度：</td>
 								<td class="rightTd">
-									<input type="text" name="chgt" id="chgt" class="textNoBorder" value="${tFpl.chgt} <c:if test="${not empty tFpl.chgt}">m</c:if>" readonly="readonly"/>
+									<input type="text" name="chgt" id="chgt" class="textNoBorder" value="${tFpl.chgt} <c:if test="${not empty tFpl.chgt}">m</c:if>" readonly />
 								</td>
 							</tr>
 							<tr>
 								<td class="leftTd">飞行速度：</td>
 								<td class="rightTd">
-									<input type="text" class="textNoBorder" value="${tFpl.cspd} <c:if test="${not empty tFpl.cspd}">km/h</c:if>" readonly="readonly"/>
+									<input type="text" class="textNoBorder" value="${tFpl.cspd} <c:if test="${not empty tFpl.cspd}">km/h</c:if>" readonly/>
 								</td>
 								<td class="leftTd">飞行规则：</td>
 								<td class="rightTd">
 									<c:forEach var="item" items="${flyRuleList}">
-			                			<c:if test="${tFpl.rule eq item.code_id }"><input type="text" class="textNoBorder" value="${item.name}" readonly="readonly"/></c:if>
+			                			<c:if test="${tFpl.rule eq item.code_id }"><input type="text" class="textNoBorder" value="${item.name}" readonly/></c:if>
 			                    	</c:forEach>
 							    </td>
 								<td></td>
@@ -324,7 +374,7 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
 						<input type="hidden" class="selectText" name="lineFlag" id="lineFlag" value="1"/><%-- 标记哪条航线表示的是主航线：1 则 lineTableDiv1表示主航线，0 则 lineTableDiv2 表示主航线 --%>
 						<input type="hidden" class="selectText" name="viewTypeFlag" id="viewTypeFlag" value="1"/><%-- 标记当前显示的是哪条航线：1 则当前显示的是主航线，0 则当前显示的是备航线 --%>
 			           	
-						<input type="button" class="LineButton mainLineButton"  name="mainBut" id="mainBut" value="主" onclick="showSelectLineDraw('1');showSelectLineDiv('1');"/><input type="button" class="LineButton prepareLinButton" name="bakBut" id="bakBut" value="备"  onclick="showSelectLineDraw('0');showSelectLineDiv('0');"/>
+						<input type="button" class="LineButton mainLineButton"  name="mainBut" id="mainBut" value="主" onclick="showSelectLineDraw('1');showSelectLineDiv('1');"/><input type="button" class="LineButton prepareLinButton" name="bakBut" id="bakBut" value="备"  onClick="showSelectLineDraw('0');showSelectLineDiv('0');"/>
 					</div>
 					<div id="lineTableDiv1" class="lineTableDiv divShowScroll" >
 						<table id="lineTable1" class="lineTable">
@@ -443,50 +493,62 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
 				<!--==========设置下面圆角start===========-->
 				<div class="round">
 					<div class="roundLeft leftRound">
-							<div class="roundLeftLeft"><img src="images2/Context_yj4.png" /></div>
-							<div class="roundLeftRight"></div>
-				  </div>
-						<div class="roundRight"><img src="images2/Context_yj3.png" /></div>
+						<div class="roundLeftLeft"><img src="images2/Context_yj4.png" /></div>
+						<div class="roundLeftRight"></div>
+				  	</div>
+					<div class="roundRight"><img src="images2/Context_yj3.png" /></div>
 				</div>
 				<!--==========设置下面圆角end===========-->
 			</div>
-			
-			<!--==========================文本信息-安全提示============================-->
+			<!--==========文本信息-飞行计划其他信息==========-->
 			<div class="fPlanLeftCenter">
 				<!--==========设置上面圆角start===========-->
 				<div class="titleLeftRound">
 					<div class="roundLeft leftRound">
 						<div class="roundLeftLeft"><img src="images2/left_Context_yj1.png" /></div>
-						<div class="topRoundLeftRight">
-						&nbsp;<input type="button" class="TabSecurityButton mainLineButton"  name="metarBut" id="metarBut" value="METAR" onclick="searchNotes('1');"/><input type="button" class="TabSecurityButton prepareLinButton" name="sigmetBut" id="sigmetBut" value="SIGMET" onclick="searchNotes('2');"/><input type="button" class="TabSecurityButton prepareLinButton" name="notamBut" id="notamBut" value="NOTAM" onclick="searchNotes('3');"/><input type="button" class="TabSecurityButton prepareLinButton" name="conflictBut" id="conflictBut" value="安全提示" onclick="searchNotes('4');"/>
-							<div class="tabSecurityTitleRight"></div><input type="hidden" id="noteType" name="noteType"/><input type="hidden" id="fiId" name="fiId"/>
-						</div>
+						<div class="topRoundLeftRight"><div class="roundTitle">安全提示</div><div class="roundTitleRight"></div>	</div>
 					</div>
-				<div class="roundRight"><img src="images2/left_Context_yj2.png" /></div>
+					<div class="roundRight"><img src="images2/left_Context_yj2.png" /></div>
 				</div>
 				<!--==========设置上面圆角end===========-->
 				<div class="fPlanLeftBottomContext">
 					<div class="securityTableDiv divShowScroll" id="conflict_div">
-						<table class="inputTableTo" id="flyConflictTbl">
-							<tr id="metar">
-								<td style="width:80px;" class="leftTd">METAR：</td>
-								<td class="rightTd"><textarea  class="fPlanTextareaNoBorder2" id="notes1" name="notes1" readonly="readonly">${notesStr}</textarea></td>
+						<table class="lineTable" id="flyConflictTbl">
+							<tr class="lineTableTitle">
+								<td width="26">序号</td>
+								<td width="100">冲突类型</td>
+								<td width="180">冲突原因</td>
+								<td width="180">冲突时间</td>
 							</tr>
-							<tr id="sigmet" style="display:none;">
-								<td style="width:80px;" class="leftTd">SIGMET：</td>
-								<td class="rightTd"><textarea  class="fPlanTextareaNoBorder2" id="notes2" name="notes2" readonly="readonly"></textarea></td>
+							<tr class="twoTdClass">
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
 							</tr>
-							<tr id="notam" style="display:none;">
-								<td style="width:80px;" class="leftTd">NOTAM：</td>
-								<td class="rightTd"><textarea  class="fPlanTextareaNoBorder2" id="notes3" name="notes3" readonly="readonly"></textarea></td>
+							<tr class="oneTdClass">
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
 							</tr>
-							<tr id="conflict" style="display:none;">
-								<td style="width:80px;" class="leftTd">安全提示：</td>
-								<td class="rightTd"><textarea  class="fPlanTextareaNoBorder2" id="notes4" name="notes4" readonly="readonly"></textarea></td>
+							<tr class="twoTdClass">
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
 							</tr>
-							<tr>
-								<td style="width:80px;" class="leftTd">备注：</td>
-								<td class="rightTd"><textarea  class="fPlanTextareaNoBorder" id="remark" name="remark" onfocus="showBorder(this,'1')" onblur="hideBorder(this,'1')"></textarea></td>
+							<tr class="oneTdClass">
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+							</tr>
+							<tr class="twoTdClass">
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
 							</tr>
 						</table>
 					</div>
@@ -494,23 +556,23 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
 				<!--==========设置下面圆角start===========-->
 				<div class="round">
 					<div class="roundLeft leftRound">
-							<div class="roundLeftLeft"><img src="images2/Context_yj4.png" /></div>
-							<div class="roundLeftRight"></div>
-				  </div>
-						<div class="roundRight"><img src="images2/Context_yj3.png" /></div>
+						<div class="roundLeftLeft"><img src="images2/Context_yj4.png" /></div>
+						<div class="roundLeftRight"></div>
+				  	</div>
+					<div class="roundRight"><img src="images2/Context_yj3.png" /></div>
 				</div>
 				<!--==========设置下面圆角end===========-->
 			</div>
 			
-			<!--==========文本信息-飞行计划其他信息==========-->
+			<!--==========================文本信息-安全提示============================-->
 			<div class="fPlanLeftBottom">
 				<!--==========设置上面圆角start===========-->
 				<div class="titleLeftRound">
 					<div class="roundLeft leftRound">
 							<div class="roundLeftLeft"><img src="images2/left_Context_yj1.png" /></div>
 							<div class="topRoundLeftRight"><div class="roundTitle">其他信息</div><div class="roundTitleRight"></div></div>
-				  </div>
-						<div class="roundRight"><img src="images2/left_Context_yj2.png" /></div>
+				 	</div>
+					<div class="roundRight"><img src="images2/left_Context_yj2.png" /></div>
 				</div>
 				<!--==========设置上面圆角end===========-->
 				
@@ -520,32 +582,32 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
 							<tr>
 								<td class="leftTd">计划名称：</td>
 								<td class="rightTd">
-									<input type="text" class="textNoBorder" value="${tFpl.FPlanName}" readonly="readonly"/>
+									<input type="text" class="textNoBorder" value="${tFpl.FPlanName}" readonly>
 								</td>
 								<td class="leftTd">飞行编号：</td>
 								<td class="rightTd">
-									<input type="text" class="textNoBorder" value="${tFpl.FPlanCode}" readonly="readonly"/>
+									<input type="text" class="textNoBorder" value="${tFpl.FPlanCode}" readonly>
 								</td>
 								<td class="leftTd">计划类别：</td>
 								<td class="rightTd">
-									<input type="text" class="textNoBorder" value="通航一次性飞行计划" readonly="readonly"/>
+									<input type="text" class="textNoBorder" value="通航一次性飞行计划" readonly>
 								</td>
 							</tr>
 							<tr>
 								<td class="leftTd">飞行类型：</td>
 								<td class="rightTd">
 									<c:forEach var="item" items="${flyTypeList}">
-		                    			<c:if test="${tFpl.types eq item.code_id}"><input type="text" class="textNoBorder" value="${item.name}" readonly="readonly"/></c:if>
+		                    			<c:if test="${tFpl.types eq item.code_id}"><input type="text" class="textNoBorder" value="${item.name}" readonly></c:if>
 		                    		</c:forEach>
 								</td>
 								<td class="leftTd">飞行时长：</td>
 								<td class="rightTd">
-									<input type="text" class="textNoBorder" value="${tFpl.eet}" readonly="readonly"/>
+									<input type="text" class="textNoBorder" value="${tFpl.eet}" readonly>
 								</td>
 								<td class="leftTd">航空公司：</td>
 								<td class="rightTd">
 									<c:forEach var="item" items="${airlineCompanyList}">
-										<c:if test="${tFpl.unit eq item.code_id}"><input type="text" class="textNoBorder" value="${item.name}" readonly="readonly"/></c:if> 
+										<c:if test="${tFpl.unit eq item.code_id}"><input type="text" class="textNoBorder" value="${item.name}" readonly></c:if> 
 			                    	</c:forEach>
 								</td>
 							</tr>
@@ -553,7 +615,7 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
 								<td class="leftTd">飞行员：</td>
 								<td class="rightTd">
 									<c:forEach var="item" items="${pilotList}">
-			                    		<c:if test="${tFpl.commander eq item.code_id}"><input type="text" class="textNoBorder" value="${item.name}" readonly="readonly"/></c:if>
+			                    		<c:if test="${tFpl.commander eq item.code_id}"><input type="text" class="textNoBorder" value="${item.name}" readonly></c:if>
 			                    	</c:forEach>
 								</td>
 								<td class="leftTd">航空器型号：</td>
@@ -569,25 +631,25 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
 								<td class="leftTd">航空器编号：</td>
 								<td class="rightTd">
 									<c:forEach var="item" items="${airCraftSnList}">
-			                    		<c:if test="${tFpl.acid eq item.code_id}"><input type="text" class="textNoBorder" value="${item.name}" readonly="readonly"/></c:if> 
+			                    		<c:if test="${tFpl.acid eq item.code_id}"><input type="text" class="textNoBorder" value="${item.name}" readonly></c:if> 
 			                    	</c:forEach>
 								</td>
 								<td class="leftTd">机载设备：</td>
 								<td class="rightTd">
 									<c:forEach var="item" items="${flyEquipmentList}">
-			                    		<c:if test="${tFpl.equip eq item.code_id}"><input type="text" class="textNoBorder" value="${item.name}" readonly="readonly"/></c:if>
+			                    		<c:if test="${tFpl.equip eq item.code_id}"><input type="text" class="textNoBorder" value="${item.name}" readonly></c:if>
 			                    	</c:forEach>
 								</td>
 								<td class="leftTd">是否需要提醒：</td>
 								<td class="rightTd">
-									<c:if test="${tFpl.alarm eq '1'}"><input type="text" class="textNoBorder" value="是" readonly="readonly"/></c:if>
-			                    	<c:if test="${tFpl.alarm eq '0'}"><input type="text" class="textNoBorder" value="否" readonly="readonly"/></c:if>
+									<c:if test="${tFpl.alarm eq '1'}"><input type="text" class="textNoBorder" value="是" readonly></c:if>
+			                    	<c:if test="${tFpl.alarm eq '0'}"><input type="text" class="textNoBorder" value="否" readonly></c:if>
 							    </td>
 							</tr>
-							<tr>
+							<tr id="1">
 								<td class="leftTd">备注：</td>
-								<td class="rightTd" colspan="5">
-									<textarea  class="fPlanTextareaNoBorder3"  id="remark" name="remark" readonly="readonly" >${tFpl.remark}</textarea>
+								<td class="rightTd" colspan="5" >
+								<textarea  class="fPlanTextareaNoBorder3"  id="remark" name="remark" readonly >${tFpl.remark}</textarea>
 								</td>
 							</tr>
 						</table>
@@ -596,13 +658,13 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
 				<!--==========设置下面圆角start===========-->
 				<div class="round">
 					<div class="roundLeft leftRound">
-							<div class="roundLeftLeft"><img src="images2/Context_yj4.png" /></div>
-							<div class="roundLeftRight"></div>
-				  </div>
-						<div class="roundRight"><img src="images2/Context_yj3.png" /></div>
+						<div class="roundLeftLeft"><img src="images2/Context_yj4.png" /></div>
+						<div class="roundLeftRight"></div>
+				  	</div>
+					<div class="roundRight"><img src="images2/Context_yj3.png" /></div>
 				</div>
 				<!--==========设置下面圆角end===========-->
-			</div>
+			</div>		
 		</div>
 		
 		<!--==========================================================图片信息=========================================================================-->
@@ -612,8 +674,8 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
 				<!--==========设置上面圆角start===========-->
 				<div id="mapRound1" class="mapRound">
 					<div id="mapLeftRound1"  class="mapLeftRound">
-							<div class="mapRoundLeftLeft"><img src="images2/map_context_yj1.png" /></div>
-							<div id="mapRoundLeftRight1" class="mapRoundLeftRight"></div>
+						<div class="mapRoundLeftLeft"><img src="images2/map_context_yj1.png" /></div>
+						<div id="mapRoundLeftRight1" class="mapRoundLeftRight"></div>
 				    </div>
 					<div class="mapRoundRight"><img src="images2/map_context_yj2.png" /></div>
 				</div>
@@ -622,7 +684,7 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
 				<div id="fPlanRightTopContext" class="fPlanRightTopContext">
 					<div id="controlPane" style="cursor:pointer;text-align:center;padding-top:5px;position:absolute;left:1512px;top:52px;z-index: 10000;border:1px solid green;width:120px;height:15px;overflow-y:auto;overflow-x:hidden;background:grey;" onclick="shPane()">图层控制</div>
 					<div class="showMapDiv" id="showMapDiv">
-						<input type="hidden" id="userroleuicode" value="${sessionUserUICode}"/>
+						<input type="hidden" id="userroleuicode" value="${sessionUserUICode}">
 						<div id="map" style="width:100%;height:100%;background:#dff8c3;"></div>
 						<!--==========剖面图div==========-->
 						<div id="contentPane" style="cursor:pointer;text-align:left;position:absolute;left:1512px;top:72px;border:1px solid green;width:120px;height:200px;overflow-y:auto;overflow-x:hidden;background:grey;display:none;">
@@ -630,25 +692,25 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
 					</div>
 					<div class="showAirdromeImgDiv" id="showAirdromeImgDiv">
 						<div class="closeBImg">
-							<img src="images/th_xtb_tc.png" id="closeAIDiv"  title="回到地图" onclick="closeBigImgage('showAirdromeImgDiv','showMapDiv')" width="21" height="21"/>
+							<img src="images/th_xtb_tc.png" id="closeAIDiv"  title="回到地图" onClick="closeBigImgage('showAirdromeImgDiv','showMapDiv')" width="21" height="21">
 							<span id="info" style="position:absolute; right:25px; bottom:5px; color:#000; z-index:50;"></span>
 						</div>
 						<img id="airdromeImg" src=""/>
 					</div>
 					<div class="foldImgDiv" id="foldImgDiv">
 						<div class="mapCloseBImg">
-							<img src="images/qxdj.png"  title="取消叠加" onclick="closeBigImgage('foldImgDiv','showMapDiv')" width="24" height="21"/>
+							<img src="images/qxdj.png"  title="取消叠加" onClick="closeBigImgage('foldImgDiv','showMapDiv')" width="24" height="21">
 						</div>
 						<img id="foldImg" src=""/>
 					</div>
-					<div class="blowupDiv" id="blowupDiv" onclick="blowupMapDiv()" title="放大地图"></div>
+					<div class="blowupDiv" id="blowupDiv" onClick="blowupMapDiv()" title="放大地图"></div>
 				</div>
 				
 				<!--==========设置下面圆角start===========-->
 				<div id="mapRound2" class="mapRound">
 					<div id="mapLeftRound2"  class="mapLeftRound mapLeftRoundTo">
-							<div class="mapRoundLeftLeft"><img src="images2/map_context_yj4.png" /></div>
-							<div id="mapRoundLeftRight2" class="mapRoundLeftRight bMapRoundLeftRight"></div>
+						<div class="mapRoundLeftLeft"><img src="images2/map_context_yj4.png" /></div>
+						<div id="mapRoundLeftRight2" class="mapRoundLeftRight bMapRoundLeftRight"></div>
 				    </div>
 					<div class="mapRoundRight mapRoundRightTo"><img src="images2/map_context_yj3.png" /></div>
 				</div>
@@ -660,8 +722,8 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
 				<!--==========设置上面圆角start===========-->
 					<div id="mapRound3" class="mapRound">
 						<div id="mapLeftRound3" class="mapLeftRound">
-								<div class="mapRoundLeftLeft"><img src="images2/map_context_yj1.png" /></div>
-								<div id="mapRoundLeftRight3" class="mapRoundLeftRight"></div>
+							<div class="mapRoundLeftLeft"><img src="images2/map_context_yj1.png" /></div>
+							<div id="mapRoundLeftRight3" class="mapRoundLeftRight"></div>
 						</div>
 						<div class="mapRoundRight"><img src="images2/map_context_yj2.png" /></div>
 					</div>
@@ -676,8 +738,8 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
 					<!--==========设置下面圆角start===========-->
 					<div  id="mapRound4" class="mapRound">
 						<div id="mapLeftRound4" class="mapLeftRound mapLeftRoundTo">
-								<div class="mapRoundLeftLeft"><img src="images2/map_context_yj4.png" /></div>
-								<div id="mapRoundLeftRight4" class="mapRoundLeftRight bMapRoundLeftRight"></div>
+							<div class="mapRoundLeftLeft"><img src="images2/map_context_yj4.png" /></div>
+							<div id="mapRoundLeftRight4" class="mapRoundLeftRight bMapRoundLeftRight"></div>
 						</div>
 						<div class="mapRoundRight mapRoundRightTo"><img src="images2/map_context_yj3.png" /></div>
 					</div>
@@ -689,21 +751,21 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
 					<div id="sImg">
 						<table cellpadding="0" cellspacing="0" class="fourWeatherImgTable">
 							<tr>
-								<td><img src="images/weather/dbfx_01.jpg" onclick="showBigImgage('bImgDiv','sImg','bImg',this,'','',null,'1')"></td>
-								<td><img src="images/weather/ld_01.gif" onclick="showBigImgage('bImgDiv','sImg','bImg',this,'','',null,'2')"></td>
+								<td><img src="images/weather/dbfx_01.jpg" onClick="showBigImgage('bImgDiv','sImg','bImg',this,'','',null,'1')"></td>
+								<td><img src="images/weather/ld_01.gif" onClick="showBigImgage('bImgDiv','sImg','bImg',this,'','',null,'2')"></td>
 							</tr>
 							<tr>
-								<td><img src="images/weather/wx_01.jpg" onclick="showBigImgage('bImgDiv','sImg','bImg',this,'','',null,'3')"></td>
-								<td><img src="images/weather/rain_01.jpg" onclick="showBigImgage('bImgDiv','sImg','bImg',this,'','',null,'4')"></td>
+								<td><img src="images/weather/wx_01.jpg" onClick="showBigImgage('bImgDiv','sImg','bImg',this,'','',null,'3')"></td>
+								<td><img src="images/weather/rain_01.jpg" onClick="showBigImgage('bImgDiv','sImg','bImg',this,'','',null,'4')"></td>
 							</tr>
 					  </table>
 				  </div>
 				  <div id="bImgDiv">
-  				  	<div class="imgLeftward" onclick="changeImg('1','bImg')" title="上一张">&nbsp;</div>
-				  	<div class="imgRightward" onclick="changeImg('2','bImg')" title="下一张">&nbsp;</div>
+  				  	<div class="imgLeftward" onClick="changeImg('1','bImg')" title="上一张">&nbsp;</div>
+				  	<div class="imgRightward" onClick="changeImg('2','bImg')" title="下一张">&nbsp;</div>
 				  	<div class="closeBImg">
-				  		<img src="images/dj.png"  title="叠加" onclick="showBigImgage('sImg','bImgDiv','foldImg','','','foldImgDiv')" width="24" height="21">
-				  		<img src="images/gb.png"  title="关闭" onclick="closeBigImgage('bImgDiv','sImg')" width="24" height="21">
+				  		<img src="images/dj.png"  title="叠加" onClick="showBigImgage('sImg','bImgDiv','foldImg','','','foldImgDiv')" width="24" height="21">
+				  		<img src="images/gb.png"  title="关闭" onClick="closeBigImgage('bImgDiv','sImg')" width="24" height="21">
 				  	</div>
 				  	<div class="bImgMessage" id="bImgMessage"></div>
 				  	<input type="hidden" value="dbfx_01.jpg_#_dbfx_02.jpg" id="imgNames1"/>
@@ -721,7 +783,14 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
 	<!--==========================================================浮动菜单，版权信息=========================================================================-->
 	<div class="bottomButtonArea">
 		<div class="buttonArea">
-			<input class="buttonArea1" type="button" value="  讲解完成" onclick="saveExplain();"/> <input class="buttonArea3" type="button" value="  返 回" onclick="goBack();"/>
+			<c:choose>
+			<c:when test="${operFlag == 'view'}">
+				<input class="buttonArea3" type="button" value="  关闭" onclick="closeSDiv('1');"/>
+			</c:when>
+			<c:otherwise>
+				<input class="buttonArea3" type="button" value="  返回" onclick="goBack();"/>
+			</c:otherwise>
+			</c:choose>
 		</div>
 	</div>
 	</form>
@@ -739,73 +808,6 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
 // 		getPointInfoByCode(dojo.byId('altn1Code').value);
 		onLoadGisLine();
 		
-	}
-	
-	// 根据index查询不同的讲解内容 1：常规气象 2：重大气象 3：航行通告 4：安全提示
-	function searchNotes(index){
-		document.getElementById("noteType").value=index;
-					
-		if(index == "4") {
-			showConflict();
-		} else {
-			var jsondata = $("#form1").serialize();
-			$.post('<c:url value="/planAuditAction.ax?method=searchFlyServiceInfo"/>', jsondata, function(data){
-		    	if(data.data.returnflag == 'true') {
-		    		var noteType = document.getElementById("noteType").value;
-			    	if(noteType == '1'){
-				    	document.getElementById("metar").style.display="block";
-	    				document.getElementById("metarBut").className="TabSecurityButton mainLineButton";
-			    		document.getElementById("notes1").value=data.data.notesStr;
-					}else{
-						document.getElementById("metar").style.display="none";
-						document.getElementById("metarBut").className="TabSecurityButton prepareLinButton";
-						document.getElementById("conflict").style.display="none";
-						document.getElementById("conflictBut").className="TabSecurityButton prepareLinButton";
-					}
-					if(noteType == '2'){
-			    		document.getElementById("sigmet").style.display="block";
-			    		document.getElementById("sigmetBut").className="TabSecurityButton mainLineButton";
-			    		document.getElementById("notes2").value=data.data.notesStr;
-					}else{
-						document.getElementById("sigmet").style.display="none";
-						document.getElementById("sigmetBut").className="TabSecurityButton prepareLinButton";
-						document.getElementById("conflict").style.display="none";
-						document.getElementById("conflictBut").className="TabSecurityButton prepareLinButton";
-					}
-					if(noteType == '3'){
-			    		document.getElementById("notam").style.display="block";
-			    		document.getElementById("notamBut").className="TabSecurityButton mainLineButton";
-			    		document.getElementById("notes3").value=data.data.notesStr;
-					}else{
-						document.getElementById("notam").style.display="none";
-						document.getElementById("notamBut").className="TabSecurityButton prepareLinButton";
-						document.getElementById("conflict").style.display="none";
-						document.getElementById("conflictBut").className="TabSecurityButton prepareLinButton";
-					}
-		    		
-		    	}else {
-		    		if(noteType == '1'){
-		    			showConfirmDiv(2,'常规气象查询失败!','操作提示信息');
-		    		} else if(noteType == '2'){
-		    			showConfirmDiv(2,'重大气象查询失败!','操作提示信息');
-		    		} else if(noteType == '3'){
-		    			showConfirmDiv(2,'航行通告查询失败!','操作提示信息');
-		    		}
-	    		}
-	   		},"json");
-		}
-	}
-	
-	function saveExplain(){
-		var jsondata = $("#form1").serialize();
-		$.post('<c:url value="/planAuditAction.ax?method=saveFlyServiceInfo"/>', jsondata, function(data){
-	    	if(data.data.returnflag == 'true') {
-	    		document.getElementById("fiId").value=data.data.fiId;
-		    	showConfirmDiv(2,'讲解内容保存成功!','操作提示信息');
-	    	}else {
-	    		showConfirmDiv(2,'讲解内容查询失败!','操作提示信息');
-	    	}
-	    },"json");
 	}
 </script>
 </html>
