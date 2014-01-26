@@ -2,10 +2,11 @@
 
 // Code for Monster Milktruck demo, using Earth Plugin.
 
-window.truck = null;
+window.plane = null;
+window.global = null;
 
 // Pull the Milktruck model from 3D Warehouse.
-  var MODEL_URL = 'http://127.0.0.1:8080/EarthView/resource/cessna162_0.kmz';
+var MODEL_URL = 'http://127.0.0.1:8080/EarthView/resource/cessna162_0.kmz';
   //var MODEL_URL = 'http://www.barnabu.co.uk/geapi/flightsim/hawk.kmz';
 var TICK_MS = 66;
 
@@ -15,7 +16,7 @@ var ROLL_DAMP = -0.16;
 
 var ACCEL =100; 
 
-function Truck() {
+function Plane(_modelURL) {
   var me = this;
 
   me.doTick = false;
@@ -50,20 +51,13 @@ function Truck() {
 
   ge.getOptions().setFlyToSpeed(100);  // don't filter camera motion
 
-	  window.google.earth.fetchKml(ge, MODEL_URL,
+  window.google.earth.fetchKml(ge, _modelURL? _modelURL: MODEL_URL,
               function(obj) { me.finishInit(obj); });
   
 }
-
-Truck.prototype.reportPosition = function() {
-	  var me = this;
-	  
-	  fixedMessage= "la:" + truck.model.getLocation().getLatitude() + " lo:" + truck.model.getLocation().getLongitude() + " al: " +
-	  truck.model.getLocation().getAltitude()+"\n" ;
-}
 	  
 	  
-Truck.prototype.finishInit = function(kml) {
+Plane.prototype.finishInit = function(kml) {
   var me = this;
 
   // The model zip file is actually a kmz, containing a KmlFolder with
@@ -84,25 +78,24 @@ Truck.prototype.finishInit = function(kml) {
   me.balloon.setFeature(me.placemark);
   me.balloon.setMaxWidth(200);
 
+  //初始化位置
   prepareRoute();
-  me.teleportTo(startPos[0],startPos[1]);  // Looking at the srart Position
-
+  moveToStart();
+  plane.adjustPosition();
   me.lastMillis = (new Date()).getTime();
 
   var href = window.location.href;
   var pagePath = href.substring(0, href.lastIndexOf('/')) + '/';
 
-  google.earth.addEventListener(ge, "frameend", function() { me.tick(); });
-
-  me.cameraCut();
+  google.earth.addEventListener(ge, "frameend", afterFrameEnd);
   
   ge.getWindow().blur();
-
   // If the user clicks on the Earth window, try to restore keyboard
   // focus back to the page.
-  //google.earth.addEventListener(ge.getWindow(), "mouseup", function(event) {
-      //ge.getWindow().blur();
-  //  });
+  /*google.earth.addEventListener(ge.getWindow(), "mouseup", function(event) {
+      ge.getWindow().blur();
+  	});
+  */
 }
 
 leftButtonDown = false;
@@ -161,12 +154,8 @@ function clamp(val, min, max) {
   return val;
 }
 
-Truck.prototype.tick = function() {
+Plane.prototype.tick = function() {
   var me = this;
-  if(!me.doTick){
-	  google.earth.removeEventListener(ge.getGlobe(), 'frameend', function() { me.tick(); });
-	  return ;
-  }
  
   var now = (new Date()).getTime();
   // dt is the delta-time since last tick, in seconds
@@ -199,7 +188,7 @@ Truck.prototype.tick = function() {
   var airborne = false;
   var steerAngle = 0;
   //辅助转向
-  var curPos = [truck.model.getLocation().getLatitude(),  truck.model.getLocation().getLongitude() , 0 ];
+  var curPos = [plane.model.getLocation().getLatitude(),  plane.model.getLocation().getLongitude() , 0 ];
   currentHeading=getAngle( curPos, currentTarget); 
   steerAngle = (fixAngle(me.model.getOrientation().getHeading() - currentHeading) ) * Math.PI / 180.0;
   //steerAngle = (getAngle( lastTarget, currentTarget) - currentHeading ) * Math.PI / 180.0;
@@ -227,7 +216,7 @@ Truck.prototype.tick = function() {
     if (absSpeed < SPEED_MAX_TURN) {
       turnSpeed = TURN_SPEED_MIN + (TURN_SPEED_MAX - TURN_SPEED_MIN)
                    * (SPEED_MAX_TURN - absSpeed) / SPEED_MAX_TURN;
-      turnSpeed *= (absSpeed / SPEED_MAX_TURN);  // Less turn as truck slows
+      turnSpeed *= (absSpeed / SPEED_MAX_TURN);  // Less turn as plane slows
     } else {
       turnSpeed = TURN_SPEED_MAX;
     }
@@ -249,7 +238,6 @@ Truck.prototype.tick = function() {
     		steerAngle = -turnSpeed/2 * dt * Math.PI / 180.0;
     	}
     }
-    fixedMessage="修正偏移角:"+(direction * steerAngle ) + "|" + me.model.getOrientation().getHeading() +"|"+ currentHeading;
   }
   
   // Turn.
@@ -326,9 +314,14 @@ Truck.prototype.tick = function() {
   groundAlt = ge.getGlobe().getGroundAltitude(lla[0], lla[1]);
   //控制爬升和下降的加速度
   // Gravity
-  if(me.pos[2] < FLIGHTHEIGHT){
-	  me.vel[2] += 2 * 9.8 * dt;
-  }else{
+  if(gasButtonDown){
+	  if(me.pos[2] < FLIGHTHEIGHT){
+		  me.vel[2] += 2 * 9.8 * dt;
+	  }else{
+		  me.vel[2] -= 9.8 * dt;
+	  }
+  }
+  else{
 	  me.vel[2] -= 9.8 * dt;
   }
   
@@ -337,8 +330,8 @@ Truck.prototype.tick = function() {
   var deltaPos = V3.scale(me.vel, dt);
   me.pos = V3.add(me.pos, deltaPos);
   
-  el('vel').value=forwardSpeed * 3.6;
-  el('height').value=me.pos[2];
+  el('vel').value=Math.round(forwardSpeed * 3.6);
+  el('height').value=Math.round(me.pos[2]/10)*10;
   
   gpos = V3.add(me.localAnchorCartesian,
                 M33.transform(me.localFrame, me.pos));
@@ -356,7 +349,7 @@ Truck.prototype.tick = function() {
     // Cancel velocity into the ground.
     //
     // TODO: would be fun to add a springy suspension here so
-    // the truck bobs & bounces a little.
+    // the plane bobs & bounces a little.
     var speedOutOfGround = V3.dot(normal, me.vel);
     if (speedOutOfGround < 0) {
       me.vel = V3.add(me.vel, V3.scale(normal, -speedOutOfGround));
@@ -399,9 +392,9 @@ Truck.prototype.tick = function() {
   }else if(imgR<-20){
 	  imgR = -20
   }
-  if(screenOverlay){
-	  screenOverlay.setRotation(imgR);
-  }
+  
+  global.rotate(imgR);
+  
   //me.tickPopups(dt);
   me.cameraFollow(dt, gpos, me.localFrame);
 
@@ -436,7 +429,7 @@ function estimateGroundNormal(pos, frame) {
 }
 
 
-Truck.prototype.scheduleTick = function() {
+Plane.prototype.scheduleTick = function() {
   var me = this;
   if (me.doTick) {
     setTimeout(function() { me.tick(); }, TICK_MS);
@@ -444,7 +437,7 @@ Truck.prototype.scheduleTick = function() {
 };
 
 // Cut the camera to look at me.
-Truck.prototype.cameraCut = function() {
+Plane.prototype.cameraCut = function() {
   var me = this;
   var lo = me.model.getLocation();
   var la = ge.createLookAt('');
@@ -459,23 +452,8 @@ Truck.prototype.cameraCut = function() {
   ge.getView().setAbstractView(la);
 };
 
-//后视角
-Truck.prototype.cameraCutB = function() {
-	removePanel();
-  var me = this;
-  var lo = me.model.getLocation();
-  var la = ge.createLookAt('');
-  la.set(lo.getLatitude(), lo.getLongitude(),
-		 lo.getAltitude(),
-         ge.ALTITUDE_RELATIVE_TO_SEA_FLOOR,
-         me.model.getOrientation().getHeading() ,
-         80, /* tilt */
-         50 /* range */
-         );
-  ge.getView().setAbstractView(la);
-};
 
-Truck.prototype.cameraFollow = function(dt, truckPos, localToGlobalFrame) {
+Plane.prototype.cameraFollow = function(dt, truckPos, localToGlobalFrame) {
   var me = this;
 
   var c0 = Math.exp(-dt / 0.5);
@@ -509,11 +487,17 @@ Truck.prototype.cameraFollow = function(dt, truckPos, localToGlobalFrame) {
   ge.getView().setAbstractView(la);
 };
 
+var camHeadingOffset;
+var 
+
 // heading is optional.
-Truck.prototype.teleportTo = function(lat, lon, heading) {
+Plane.prototype.teleportTo = function(lat, lon, heading) {
   var me = this;
+  //添加事件使飞机的位置变化能及时显示，解决了由于在不同的地点取一个点的海拔高度不一致的问题
+  google.earth.addEventListener(ge, "frameend", adjustPosHandler);
   me.model.getLocation().setLatitude(lat);
   me.model.getLocation().setLongitude(lon);
+  me.tempAlt = HEIGHT + ge.getGlobe().getGroundAltitude(lat, lon);
   var alt = ge.getGlobe().getGroundAltitude(lat, lon);
   me.model.getLocation().setAltitude(HEIGHT + alt);
   
@@ -535,7 +519,7 @@ Truck.prototype.teleportTo = function(lat, lon, heading) {
 
 // Move our anchor closer to our current position.  Retain our global
 // motion state (position, orientation, velocity).
-Truck.prototype.adjustAnchor = function() {
+Plane.prototype.adjustAnchor = function() {
   var me = this;
   var oldLocalFrame = me.localFrame;
 
@@ -577,7 +561,6 @@ function fixAngle(a) {
 
 //---------------------------------extend for flight --------------------//
 
-var fixedMessage="";
 //求b相对于a的方位角  依赖 flyPlan.js 的 getDistance 方法
 function getAngle2(a ,b ){
 	var lenLo = getDistance(b[0],a[1],b[0],b[1] ); //经度
@@ -637,15 +620,15 @@ function getAngle(a ,b ){
 }
 
 
-Truck.prototype.checkPoints = function (){
+Plane.prototype.checkPoints = function (){
 	var me = this;
 	var curPos = [me.model.getLocation().getLatitude(),  me.model.getLocation().getLongitude() , 0 ];
 	
 	if(currentTarget==null){
 		currentIndex=1;
-		lastTarget = chkPoints[0]
+		lastTarget = chkPoints[0];
 		currentTarget = chkPoints[1] ;
-		drawTarget();
+		global.drawTarget();
 	//}else if( V3.earthDistance(curPos,currentTarget) < 200   ){
 	}
 	var dist= getDistance(curPos[0],curPos[1],currentTarget[0],currentTarget[1]);
@@ -661,7 +644,7 @@ Truck.prototype.checkPoints = function (){
 		}
 		lastTarget=currentTarget;
 		currentTarget = chkPoints[currentIndex] ;
-		drawTarget();
+		global.drawTarget();
 	}
 	
 	el('target').value=currentIndex;
@@ -717,57 +700,100 @@ function prepareRoute(){
 	//endPos = [31.43	, 104.7397222 ,0];
 	
 	chkPoints= getLinePoints (startPos,endPos,20 );
-	truck.checkPoints();
-	removeTargets();
+	plane.checkPoints();
+	global.removeTargets();
 	currentHeading=getAngle(startPos, currentTarget);
-	truck.orientation.setHeading(currentHeading);
-	truck.cameraCut();
+	plane.orientation.setHeading(currentHeading);
+	plane.cameraCut();
 }
  
 function go(){
 	currentTarget=null;
-	drawLine();
 	prepareRoute();
+	global.drawRoute();
 	moveToStart();
 	startPlane();
 	
 }
 
-function startPlane(){
-	google.earth.addEventListener(ge, "frameend", function() { me.tick(); });
-	gasButtonDown = true;
-	truck.doTick = true;
+Plane.prototype.adjustPosition = function (){
+	var me = this; 
 	
-	//message("目标角:"+truck.model.getOrientation().getHeading());
+	var lat = me.model.getLocation().getLatitude();
+	var lon = me.model.getLocation().getLongitude();
+	//messageFix( (HEIGHT + ge.getGlobe().getGroundAltitude(lat, lon)) + "=? " +me.tempAlt );
+	if ( (HEIGHT + ge.getGlobe().getGroundAltitude(lat, lon)) != me.tempAlt ){
+		message("移动位置" + me.lastMillis,1);
+		me.teleportTo(lat, lon, currentHeading /180 * Math.PI);
+		//调用后移除相应的事件，避免事件流过于复杂引起飞机运动缓慢
+		google.earth.removeEventListener(ge, "frameend", adjustPosHandler);
+	}else{
+		message("没动" + me.lastMillis + "\n" +(HEIGHT + ge.getGlobe().getGroundAltitude(lat, lon)) + "=? " +me.tempAlt ,1);
+	}
+	
+	
+};
+
+function afterFrameEnd(event){
+	if(plane.doTick){
+		plane.tick();
+	}
+}
+
+function adjustPosHandler(event){
+	
+	plane.adjustPosition();
+	
+}
+
+function startPlane(){
+	google.earth.addEventListener(ge, "frameend", afterFrameEnd);
+	gasButtonDown = true;
+	plane.doTick = true;
+	global.drawTarget();
+	//message("目标角:"+plane.model.getOrientation().getHeading());
 }
 
 function stopPlane(){
 	gasButtonDown = false;
-	truck.doTick = false;
-	google.earth.removeEventListener(ge, "frameend", function() { me.tick(); });
+	plane.doTick = false;
+	google.earth.removeEventListener(ge, "frameend", afterFrameEnd);
 }
 function moveToStart(){
-	if(!startPos) return;
-	HEIGHT = 0;
-	truck.teleportTo ( startPos[0] ,  startPos[1] ,currentHeading /180 * Math.PI) ;
-	//message("目标角:"+truck.model.getOrientation().getHeading());
+	moveTo(startPos);
+}
+function moveToNext(){
+	if(currentIndex<chkPoints.length-1){
+		moveTo(chkPoints[currentIndex+1]);
+	}else{
+		moveTo(endPos);
+	}
 }
 function moveToEnd(){
-	if(!endPos) return;
-	HEIGHT = 0;
-	truck.teleportTo(endPos[0]	, endPos[1]	,currentHeading /180 * Math.PI);
+	moveTo(endPos);
 }
 
-
-function message(val){
-	el('inforBox').value=fixedMessage+ "\n"+ val;
+function moveTo(point){
+	if(!point) return;
+	
+	plane.teleportTo(point[0]	, point[1]	,currentHeading /180 * Math.PI);
+	//google.earth.removeEventListener(ge, "frameend", adjustPosHandler);
+}
+function message(val,index){
+	if(!index)index = 0;
+	
+	el('inforBox'+index).value=val;
 }
 
 function changeSpeed(v){
+	if(v>0 && ACCEL< 20){v=1;}
+	if(v<0 && ACCEL<= 20){v=-1;}
 	
-	if(ACCEL>300) {ACCEL=300}
+	ACCEL+=v;
 	
-	if(ACCEL<0) {ACCEL=1}
+	if(ACCEL>300) {ACCEL=300;}
+	if(ACCEL<0) {ACCEL=1;}
+	
 	el('speed').value=ACCEL;
 }
 
