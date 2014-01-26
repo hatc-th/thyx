@@ -104,5 +104,13 @@ public interface FlyPlanManager {
 	 */
 	public BeanValue getAdMetarInfo( RequestMap requestMap ) throws Exception;
 	
+	/**
+	 * 获取从机场选中的机场对应的数据库中的ID
+	 * @param map
+	 * @return value
+	 * @throws Exception
+	 */
+	public BeanValue getAdIdInfo( RequestMap requestMap ) throws Exception;
+	
 	
 }

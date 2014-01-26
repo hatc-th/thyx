@@ -171,7 +171,7 @@
 				$(".divShowScroll")[1].autohidemode = false;
 				// showConfirmDiv(2,'航线设置成功!','操作提示信息');
 				closeSDiv('2'); // 关闭层
-				
+				getDateDiff();
 			}else{
 				showConfirmDiv(2,'航线设置失败!','操作提示信息');
 			}

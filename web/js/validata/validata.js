@@ -561,3 +561,32 @@ function hiddenToBlock(){
 	}
 }
  /***********************************元素闪烁结束*****************************************/
+/**
+ * 按字节截取指定长度的字符串，不够指定长度的，直接返回原字符串
+ *
+ * @param str		需截取的字符串对象
+ * @param ilen 限定的长度
+*/
+function getStringTruncation(str,ilen) {
+		
+	var temp="";
+	var l=0;
+	var schar;
+	if(str.len() > ilen) {
+		
+		for(var i = 0; schar=str.charAt(i);i++) {
+			
+			temp+=schar;
+			l +=(schar.match(/[^\x00-\xff]/)!=null?2:1);
+			if(l>=ilen){
+				break;
+			}
+		}
+		if(temp.len()>ilen){
+			temp = temp.substr(0,temp.length-1);
+		}
+		return temp+"...";	
+	} else {
+		return 	str;	
+	}
+}

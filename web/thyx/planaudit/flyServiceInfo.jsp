@@ -734,9 +734,9 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
 		
 		dojo.connect(toolbar, "onDrawEnd", addToMap);
 		
-		getPointInfoByCode(dojo.byId('adepCode').value);
-		getPointInfoByCode(dojo.byId('adesCode').value);
-		getPointInfoByCode(dojo.byId('altn1Code').value);
+// 		getPointInfoByCode(dojo.byId('adepCode').value);
+// 		getPointInfoByCode(dojo.byId('adesCode').value);
+// 		getPointInfoByCode(dojo.byId('altn1Code').value);
 		onLoadGisLine();
 		
 	}

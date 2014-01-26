@@ -4,7 +4,6 @@
     "http://struts.apache.org/dtds/struts-config_1_2.dtd">
 
 <struts-config>
-
 	<action-mappings>
     	
 		<!-- 飞行计划审批管理 -->
@@ -23,7 +22,14 @@
             <forward name="statusInfo" path="/thyx/planaudit/planStatusInfo.jsp" />
             <forward name="searchList_invalid" path="/thyx/planaudit/planInvalidManager.jsp" />
         </action>
+       
+        <!-- 飞行计划实施管理 -->
+		<action path="/ActFlyPlanAction" type="com.hatc.thyx.web.actflyplan.ActFlyPlanAction"  parameter="method">
+			<forward name="affirmBeforeAct" path="/thyx/actflyplan/affirmBeforeAct.jsp" />
+			<!-- 查看飞行计划 -->
+			<forward name="flyPlanInfoDetail" path="/thyx/actflyplan/flyPlanInfoDetail.jsp" />
+		</action>
+	
 	</action-mappings>
-    
 </struts-config>
 

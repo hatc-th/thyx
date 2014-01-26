@@ -2229,4 +2229,25 @@ public class FlyPlanManagerImpl extends ProjectManagerImpl implements FlyPlanMan
 		
 		return beanValue;
 	}
+	
+	
+	@Override
+	public BeanValue getAdIdInfo(RequestMap requestMap) throws Exception {
+			
+		BeanValue beanValue = new BeanValue();
+		String  icaoCode=requestMap.getString("icaoCode");
+		String adId="";
+		if (StringUtils.isNotEmpty(icaoCode)) {
+			List<String[]> temp =dao.getObjects("select t.objectid from t_ad t where t.icao_code ='"+icaoCode.trim()+"'", new String[]{"objectid"});
+			if(temp != null && temp.size() > 0){
+				adId = temp.get(0)[0];
+			}
+		}
+		beanValue.addRequestMap("adId", adId);
+		
+	//	  /** 记录日志 */ 
+	//	requestMap.addParameter(ProjectConstants.LOG_TEXT, "常规航线信息");
+		
+		return beanValue;
+	}
 }

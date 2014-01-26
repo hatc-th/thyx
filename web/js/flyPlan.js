@@ -311,7 +311,46 @@ function setNVInfo(arr){
     
     showGraphicPonit(wayType);
     reDrawLineSection(wayType);
+    getDateDiff();
 	
+}
+
+// 选择机场回调方法，设置返回的各表单元素值
+function setAdNodeInfo(flag,value,str,pos) {
+	object = {id:'',nvName:str,nvCode:value,nvPos:pos};
+	var jsondata = {
+   		//adep:adep.value,
+   		icaoCode:value
+    };
+	$.post('flyPlanAction.ax?method=getAdIdInfo', jsondata, function(data){
+		if (data.data.returnflag == "true") {
+			if (data.data.adId != "" && data.data.adId !=document.getElementById("adep").value)  {
+				if(flag == '1'){
+					document.getElementById("adepName").value = object.nvName;
+					document.getElementById("adep").value = data.data.adId;
+					document.getElementById("adepCode").value = object.nvCode;
+					document.getElementById("adepPos").value = object.nvPos;
+					addAdepOrAdesToLine('1');
+					reFreshGisLine();
+					getDateDiff();
+					
+				}else if(flag == '2' && data.data.adId !=document.getElementById("ades").value){
+					document.getElementById("adesName").value = object.nvName;
+					document.getElementById("ades").value = data.data.adId;
+					document.getElementById("adesCode").value = object.nvCode;
+					document.getElementById("adesPos").value = object.nvPos;
+					addAdepOrAdesToLine('2');
+					reFreshGisLine();
+					getDateDiff();
+					
+				}else if(data.data.adId !=document.getElementById("altn1").value){
+					document.getElementById("altn1Name").value = object.nvName;
+					document.getElementById("altn1").value = data.data.adId;
+					document.getElementById("altn1Code").value = object.nvCode;
+				}
+			}
+		}
+   	},"json");
 }
 
 /**
@@ -333,6 +372,14 @@ function gisWriteNVInfo(arr){
 	if(document.getElementById('viewTypeFlag').value == '0'){ // 当前显示的为备航线，即当前操作的为备航线
     	wayType ='0';
 	}
+ 	wayDivType='1';
+ 	if( (wayType =='1' && document.getElementById('lineFlag').value == '0')  // 显示主航线，当前 lineTableDiv2 层表示的主航线
+ 		|| (wayType =='0' && document.getElementById('lineFlag').value == '1') ){	// 或者 显示备航线，当前 lineTableDiv2 层表示的备航线
+		    wayDivType='2';
+	}
+ 	
+ 	
+	 	
 	
 	// linePointLength = 0 ;
 	
@@ -372,7 +419,7 @@ function gisWriteNVInfo(arr){
     dis1=0;  	// 当前计算距离
     dis2=0;	 	// 当前计算的最短距离
     dis3=0;		// 当前计算的倒数第二短的距离
-    if(wayType =='1'){
+    if(wayDivType =='1'){
 		for (i=0;i<document.form1.elements.length;i++){
 		
 		    if (document.form1.elements[i].name=="rs_PPosMain"){ 
@@ -669,6 +716,7 @@ function deductClick(){
 	}
 	showGraphicPonit(wayType);
 	reDrawLineSection(wayType);
+	getDateDiff();
 }
 
 /**
@@ -774,7 +822,7 @@ function upClick(opFlag){
     
     showGraphicPonit(document.getElementById('viewTypeFlag').value);
     reDrawLineSection(document.getElementById('viewTypeFlag').value);
-	
+	getDateDiff();
 }
 
 
@@ -867,6 +915,7 @@ function showSelectLineDraw(wayType){
 	}else{
 		reDrawLineSection('0');
 	}
+	getDateDiff();
 }
  	
 /***
@@ -1176,13 +1225,13 @@ function deleteSkyWay(wayType) {
 	if(wayType =='1'){
 		showSelectLineDiv('0');	
 	  	showSelectLineDiv('1');	// 显示主航线层航线
+	  	getDateDiff();
 	}else{
 		showSelectLineDiv('1');	
 	  	showSelectLineDiv('0');	// 显示备航线层航线
 	}
 	showGraphicPonit(wayType);
 	reDrawLineSection(wayType);  	
-	  	
 }
 
 /***
@@ -1417,45 +1466,137 @@ function queryGeneralSkyWays(flag) {
 /***
  * 2013-11-14 设置飞行日期时，默认设置降落日期
  */
-function setEmpSetal(){
-	dates = document.getElementById("dates");
-	setal = document.getElementById("setal");
-	
-	if(setal.value ==''){
-		setal.value = dates.value;
-		setformat(setal,outformat);
-	}
-}
+//function setEmpSetal(){
+//	dates = document.getElementById("dates");
+//	setal = document.getElementById("setal");
+//	
+//	if(setal.value ==''){
+//		setal.value = dates.value;
+//		setformat(setal,outformat);
+//	}
+//}
+
 
 /***
  * 2013-09-28 计算飞行时长
+ * 2014-01-02 日修改计算，飞行时长： 主航线距离/飞行速度 ， 降落时间： 起飞时间+飞行时长
  */
 function getDateDiff(){
-	var dates = document.getElementById("dates").value;
-	var setal = document.getElementById("setal").value;
-	var setd = document.getElementById("setd").value;
-	var seta = document.getElementById("seta").value;
-	document.getElementById("eet").value ="";
-	if(dates != null && dates !="" && setal != null && setal !=""
-		&& setd != null && setd !="" && seta != null && seta !="") {
-		
-		var a1 = new Date(Date.parse((dates+" "+setd+":00").replace(/-/g,'/')));
-		var b1 = new Date(Date.parse((setal+" "+seta+":00").replace(/-/g,'/')));
-		
-		// 计算相差的天数
-		//var aa = Math.floor((b1.getTime()-a1.getTime())/(1000*60*60*24));
-		//alert(aa);
-		// 计算相差的小时数
-		var hours = Math.floor((b1.getTime()-a1.getTime())/(1000*60*60));
-		// 计算除去相差的小时数后的剩余的毫秒数
-		var leaves = (b1.getTime()-a1.getTime())%(1000*60*60);
-		// 计算相差的分钟数
-		var minutes = Math.floor(leaves/(1000*60));
+	dates = document.getElementById("dates").value.trim();
+	setd = document.getElementById("setd").value.trim();
+	adep = document.getElementById("adep").value.trim();
+	ades = document.getElementById("ades").value.trim();
+	cspd = document.getElementById("cspd").value.trim();
+	totalDis=0;
+	 //  经度1
+ 	lng1 =0;
+  	// 纬度1 
+    lat1 =0;
+     //  经度2
+ 	lng2 =0;
+  	// 纬度2 
+    lat2 =0;
+    // showIframeDiv(718,376,'flyPlanAction.do?method=searchGeneralSkyWayList&adep='+adep.value+'&ades='+ades.value,'iframe','选择常用航线',60);
+	if(dates !='' && setd !='' && adep !='' && ades !='' && cspd !='' ){
+		wayDivType='1';
+	 	if( document.getElementById('lineFlag').value == '0') { // 当前 lineTableDiv2 层表示的主航线
+			    wayDivType='2';
+		}
+	 	lagIndex=0;
+		if(wayDivType =='1'){
+			
+			for (i=0;i<document.form1.elements.length;i++){
+			    if (document.form1.elements[i].name=="rs_PPosMain"){ 
+			    	temp=getPointNumInfo(document.form1.elements[i].value);
+			    	temp1=temp.indexOf(',');
+			    	if(lagIndex < 1){
+			    		//  经度2
+					 	lng2 =temp.substr(1,temp1-1);
+					  	// 纬度2 
+					    lat2 =temp.substr(temp1+1,temp.length - temp1-2 );
+			    	}else{
+			    		 //  经度1
+					 	lng1 =lng2;
+					  	// 纬度1 
+					    lat1 =lat2;
+					    //  经度2
+					 	lng2 =temp.substr(1,temp1-1);
+					  	// 纬度2 
+					    lat2 =temp.substr(temp1+1,temp.length - temp1-2 );
+					    totalDis += getDistance(parseFloat(lat1),parseFloat(lng1),parseFloat(lat2),parseFloat(lng2)); // 航线节点至当前需插入的节点的距离
+			    	}
+			    	lagIndex++;
+			    }
+			}
+		}else{
+			for (i=0;i<document.form1.elements.length;i++){
+			    if (document.form1.elements[i].name=="rs_PPosMain"){ 
+			    	temp=getPointNumInfo(document.form1.elements[i].value);
+			    	temp1=temp.indexOf(',');
+			    	if(lagIndex < 1){
+			    		//  经度2
+					 	lng2 =temp.substr(1,temp1-1);
+					  	// 纬度2 
+					    lat2 =temp.substr(temp1+1,temp.length - temp1-2 );
+			    	}else{
+			    		 //  经度1
+					 	lng1 =lng2;
+					  	// 纬度1 
+					    lat1 =lat2;
+					    //  经度2
+					 	lng2 =temp.substr(1,temp1-1);
+					  	// 纬度2 
+					    lat2 =temp.substr(temp1+1,temp.length - temp1-2 );
+					    totalDis += getDistance(parseFloat(lat1),parseFloat(lng1),parseFloat(lat2),parseFloat(lng2)); // 航线节点至当前需插入的节点的距离
+			    	}
+			    	lagIndex++;
+			    }
+			}
+		}
+		var mill=totalDis*3600/(parseFloat(cspd))+59999; //  毫秒
+		hours = Math.floor(mill/(1000*60*60));
+//		// 计算除去相差的小时数后的剩余的毫秒数
+		leaves = mill%(1000*60*60);
+//		// 计算相差的分钟数
+		minutes = Math.floor(leaves/(1000*60));
 		if(minutes < 10) {
 			minutes = "0" + minutes;
 		}
 		document.getElementById("eet").value=hours + ":" + minutes;
+		var a1 = new Date(Date.parse((dates+" "+setd+":00").replace(/-/g,'/')));
+		var b1 = new Date(a1.getTime()+mill);
+		document.getElementById("setal").value=b1.getFullYear()+"-"+((b1.getMonth()+1) < 10 ? "0"+(b1.getMonth()+1):(b1.getMonth()+1) )+"-"+(b1.getDate() < 10 ? "0"+b1.getDate() : b1.getDate() );
+		document.getElementById("seta").value= (b1.getHours() < 10 ? "0"+b1.getHours() : b1.getHours() ) +":"+(b1.getMinutes() < 10 ? "0"+b1.getMinutes() : b1.getMinutes() );
+		
 	}
+	
+
+	
+//	var setd = document.getElementById("setd").value;
+//	var seta = document.getElementById("seta").value;
+//	document.getElementById("eet").value ="";
+//	if(dates != null && dates !="" && setal != null && setal !=""
+//		&& setd != null && setd !="" && seta != null && seta !="") {
+//		
+//		var a1 = new Date(Date.parse((dates+" "+setd+":00").replace(/-/g,'/')));
+//		var b1 = new Date(Date.parse((setal+" "+seta+":00").replace(/-/g,'/')));
+//		
+//		// 计算相差的天数
+//		//var aa = Math.floor((b1.getTime()-a1.getTime())/(1000*60*60*24));
+//		//alert(aa);
+//		// 计算相差的小时数
+//		var hours = Math.floor((b1.getTime()-a1.getTime())/(1000*60*60));
+//		// 计算除去相差的小时数后的剩余的毫秒数
+//		var leaves = (b1.getTime()-a1.getTime())%(1000*60*60);
+//		// 计算相差的分钟数
+//		var minutes = Math.floor(leaves/(1000*60));
+//		if(minutes < 10) {
+//			minutes = "0" + minutes;
+//		}
+//		document.getElementById("eet").value=hours + ":" + minutes;
+//	}
+	
+	
 }
 
 /***
@@ -1491,8 +1632,10 @@ var graphic2='';	// 备航线地图显示对应的全局变量
 
 /***
  * 2013-10-12 根据得到的经纬度信息转换成地图可识别的数值经纬度信息
+ * param rsPPos 传递的坐标
+ * param formatType 返回的坐标格式， 1 表示返回坐标值中经度在前，2 表示返回的坐标值中纬度在前。 为空时默认为 1 经度在前
  */
-function getPointNumInfo(rsPPos){
+function getPointNumInfo(rsPPos,formatType){
 	pPos=rsPPos.split('E');
 	temp1=parseFloat(pPos[0].substr(1,2));
 	temp2=parseFloat(pPos[0].substr(3,2))/60;
@@ -1506,8 +1649,10 @@ function getPointNumInfo(rsPPos){
 	
 	wd=temp1+temp2+temp3+temp4;
 	jd=temp5+temp6+temp7+temp8;
-	
-	return '['+jd+','+wd+']';
+	if(formatType !=null && formatType == '2'){  // 三维使用格式，纬度在前
+		return '['+wd+','+jd+']';
+	}
+	return '['+jd+','+wd+']'; // 二维使用格式，经度在前
 } 
 
 /***
@@ -1608,6 +1753,10 @@ function onLoadGisLine(){
 }
 
 
+// 2014-01-25 日添加，定义全局变量用于三维飞行
+coordinateLine='';  // 三维飞行航线点坐标
+flyHignt='';  // 三维飞行航线高度
+
 /***
  * 2013-11-18 日增加，根据所选航线节点刷新刨面图
  * param wayType 需在显示的刨面图类型 
@@ -1616,44 +1765,52 @@ function onLoadGisLine(){
  */	
 function reDrawLineSection(wayType){
 	removeAreaSpaceConflictData("rs_ob");
-	chgt = parseFloat(document.getElementById('chgt').value);
+	flyHignt = parseFloat(document.getElementById('chgt').value);
 	document.getElementById('bakHeight').value = '0';
-	if(!chgt >0){
-		chgt =1000;
+	if(!flyHignt >0){
+		flyHignt =1000;
 	}
 	skWay1='';
  	skWay2='';
+ 	coordinateLine1='';
+ 	coordinateLine2='';
  	var fPlanRightBottomContext = document.getElementById("fPlanRightBottomContext");
  	document.getElementById('chartNode').style.width = fPlanRightBottomContext.offsetWidth-25+"px";
  	document.getElementById('chartNode').style.height = fPlanRightBottomContext.offsetHeight +"px";
  	for (i=0;i<document.form1.elements.length;i++){
 	    if (document.form1.elements[i].name=="rs_PPosBak"){ 
-	    		skWay1=skWay1+getPointNumInfo(document.form1.elements[i].value)+",";    	
+	    		skWay1=skWay1+getPointNumInfo(document.form1.elements[i].value,'1')+",";   
+	    		coordinateLine1 = coordinateLine1 + getPointNumInfo(document.form1.elements[i].value,'2')+",";  
 	    }
-	    if (document.form1.elements[i].name=="rs_PPosMain"){ 
-	    		skWay2=skWay2+getPointNumInfo(document.form1.elements[i].value)+",";	
+	    if (document.form1.elements[i].name=="rs_PPosMain"){
+	    		skWay2=skWay2+getPointNumInfo(document.form1.elements[i].value,'1')+",";	
+	    		coordinateLine2 =coordinateLine2 + getPointNumInfo(document.form1.elements[i].value,'2')+",";	
 	    }
 	}
  	if( (wayType =='1' && document.getElementById('lineFlag').value == '0')  // 显示主航线刨面图，当前 lineTableDiv2 层表示的主航线
  		|| (wayType =='0' && document.getElementById('lineFlag').value == '1') ){	// 或者 显示备航线刨面图，当前 lineTableDiv2 层表示的备航线
  		
  		if(skWay2 !=''){
-			gis_drawSection('['+ skWay2.substr(0,skWay2.length-1) +']', chgt,0);
+			gis_drawSection('['+ skWay2.substr(0,skWay2.length-1) +']', flyHignt,0); // 计算skWay2 对应的高度报警值
 		}
+		
+		coordinateLine = coordinateLine1;
 		if(skWay1 !=''){
 			document.getElementById('chartNode').style.display='block';
-			gis_drawSection('['+ skWay1.substr(0,skWay1.length-1) +']', chgt,1);
+			gis_drawSection('['+ skWay1.substr(0,skWay1.length-1) +']', flyHignt,1); // 画刨面图，并计算skWay1 对应的高度报警值
 		}else{
 			document.getElementById('chartNode').style.display='none';
 		}
 		
 	}else{
 		if(skWay1 !=''){
-			gis_drawSection('['+ skWay1.substr(0,skWay1.length-1) +']', chgt,0);
+			gis_drawSection('['+ skWay1.substr(0,skWay1.length-1) +']', flyHignt,0);
 		}
+		
+		coordinateLine = coordinateLine2;
 		if(skWay2 !=''){
 			document.getElementById('chartNode').style.display='block';
-			gis_drawSection('['+ skWay2.substr(0,skWay2.length-1) +']', chgt,1);
+			gis_drawSection('['+ skWay2.substr(0,skWay2.length-1) +']', flyHignt,1);
 		}else{
 			document.getElementById('chartNode').style.display='none';
 		}
