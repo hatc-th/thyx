@@ -317,6 +317,20 @@ function showDiv(sDiv_Type,sDiv_messageType,sD_width,sD_height,sDiv_titleContext
  */
 function showDivBack(obj,endInt){
 	obj.className="sbackDiv";
+	
+	frameheight = document.documentElement.clientHeight;
+	framewidth = document.documentElement.clientWidth;
+	if(framewidth <= 1663) {
+		obj.style.width="1663px";
+	}else{
+		obj.style.width=framewidth+'px'
+	}
+	if(frameheight <= 836) {
+		obj.style.height="836px";
+	}else{
+		obj.style.height=frameheight+'px';
+	}
+	
 	if(isIe){
 		sDivi = sDivi + 10;
 		obj.style.filter = "Alpha(Opacity=" + sDivi +")";

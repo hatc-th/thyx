@@ -324,3 +324,86 @@ text-align:right;
 color:#fff;
 cursor:pointer;
 }
+
+#arrirmPlan{
+margin-top:10px;
+}
+.ContextName{
+margin:0px;
+padding:0px;
+}
+
+.ContextName{
+float:left;
+width:120px;
+}
+.ContextName ul {
+list-style:none;
+margin:0px;
+padding:0px;
+}
+.ContextName ul li{
+width:110px;
+text-align:right;
+height:25px;
+padding-top:5px;
+}
+.ContextInput{
+float:right;
+width:215px;
+}
+.ContextInput ul{
+margin:0px;
+padding:0px;
+list-style:none;
+}
+.ContextInput ul li{
+width:200px;
+text-align:left;
+height:30px;
+}
+.floatDivInput{
+border:1px #ccc solid;
+width:170px;
+}
+.remarkTextarea{
+border:1px #ccc solid;
+width:170px;
+height:60px;
+}
+#remarkTextareaLi{
+width:180px;
+height:75px;
+}
+#remarkLi{
+height:75px;
+}
+.adjustRemark{
+border:1px #ccc solid;
+width:275px;
+height:100px;
+}
+.adContextName{
+padding-left:10px;
+float:left;
+width:40px;
+}
+.adContextInput{
+float:right;
+width:290px;
+}
+.adContextDiv{
+width:340px;
+height:120px;
+}
+.adSubmitDiv{
+text-align:center;
+}
+.readOnlyStyle{
+	background:#dfdfdf;
+}
+.hmInput{
+	width:20px;
+	height:18px;
+	border:1px #ccc solid;
+}
