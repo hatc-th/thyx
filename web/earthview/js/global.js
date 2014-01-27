@@ -90,6 +90,9 @@ Global.prototype.init = function() {
 		me.ge.getLayerRoot().enableLayerById(ge.LAYER_BUILDINGS, true); // /建筑
 		me.ge.getLayerRoot().enableLayerById(ge.LAYER_BORDERS, true); // 边界
 
+		me.ge.getNavigationControl().setVisibility(ge.VISIBILITY_SHOW);//显示罗盘
+		
+		me.ge.getOptions().setStatusBarVisibility(true); //显示状态栏 
 		me.ge.getOptions().setFlyToSpeed(ge.SPEED_TELEPORT);
 		me.plane = new Plane();
 		plane= me.plane;
@@ -200,13 +203,12 @@ Global.prototype.addPanel = function() {
 
 	with (me) {
 		// Create the panelMask.
-		me.panelMask = me.ge.createpanelMask('');
+		panelMask = ge.createScreenOverlay('');
 
 		// Specify a path to the image and set as the icon.
-		var icon = me.ge.createIcon('');
-		icon
-				.setHref('http://127.0.0.1:8080/EarthView/resource/icon_cessna172.png');
-		me.panelMask.setIcon(icon);
+		var icon = ge.createIcon('');
+		icon.setHref('http://127.0.0.1:8080/EarthView/resource/icon_cessna172.png');
+		panelMask.setIcon(icon);
 
 		// Important note: due to a bug in the API, screenXY and overlayXY
 		// have opposite meanings than their KML counterparts. This means
@@ -245,7 +247,10 @@ Global.prototype.addPanel = function() {
 
 Global.prototype.removePanel = function() {
 	var me = this;
-	me.ge.getFeatures().removeChild(me.panelMask);
+	if(me.panelMask){
+		me.ge.getFeatures().removeChild(me.panelMask);
+		me.panelMask=null;
+	}
 };
 
 Global.prototype.rotate = function() {
@@ -276,26 +281,56 @@ Global.prototype.cameraMove=function(lat,lon){
 Global.prototype.cameraOnboard=function(){
 	var me = this;
 	me.addPanel();
-	var lo = me.model.getLocation();
+	var lo = plane.model.getLocation();
 	var la = me.ge.createLookAt('');
 	la.set(lo.getLatitude(), lo.getLongitude(),
-		 lo.getAaltitude() /* altitude */,
-		 me.ALTITUDE_RELATIVE_TO_GROUND,
-		 me.model.getOrientation().getHeading() ,
-         90, /* tilt */
+		 lo.getAltitude()+10 /* altitude */,
+		 ge.ALTITUDE_ABSOLUTE,
+		 plane.model.getOrientation().getHeading() ,
+         80, /* tilt */
          0 /* range */
          );
 	me.ge.getView().setAbstractView(la);
+	message (lo.getAltitude());
 };
 //机尾视角
 Global.prototype.cameraBack=function(){
-	;
+	var me = this;
+	me.removePanel();
+	plane.cameraCut();
+	camHeadingOffset=0;
 };
 //左侧视角
 Global.prototype.cameraLeft=function(){
-	
+	var me = this;
+	me.removePanel();
+	var lo = plane.model.getLocation();
+	var la = me.ge.createLookAt('');
+	la.set(lo.getLatitude(), lo.getLongitude(),
+		 lo.getAltitude() /* altitude */,
+		 ge.ALTITUDE_ABSOLUTE,
+		 fixAngle( plane.model.getOrientation().getHeading() + 90 ),
+         60, /* tilt */
+         100 /* range */
+         );
+	me.ge.getView().setAbstractView(la);
+	//camHeadingOffset=90;
+	message (lo.getAltitude());
 };
 //右侧视角
-Global.prototype.cameraBack=function(){
-	
+Global.prototype.cameraRight=function(){
+	var me = this;
+	me.removePanel();
+	var lo = plane.model.getLocation();
+	var la = me.ge.createLookAt('');
+	la.set(lo.getLatitude(), lo.getLongitude(),
+		 lo.getAltitude() /* altitude */,
+		 ge.ALTITUDE_ABSOLUTE,
+		 fixAngle(plane.model.getOrientation().getHeading() - 90),
+         60, /* tilt */
+         100 /* range */
+         );
+	me.ge.getView().setAbstractView(la);
+	//camHeadingOffset=-90;
+	message (lo.getAltitude());
 };
