@@ -6,7 +6,7 @@ window.plane = null;
 window.global = null;
 
 // Pull the Milktruck model from 3D Warehouse.
-var MODEL_URL = 'http://127.0.0.1:8080/EarthView/resource/cessna162_0.kmz';
+var MODEL_URL =  'earthview/resource/cessna162_0.kmz';
   //var MODEL_URL = 'http://www.barnabu.co.uk/geapi/flightsim/hawk.kmz';
 var TICK_MS = 66;
 
@@ -51,7 +51,7 @@ function Plane(_modelURL) {
 
   ge.getOptions().setFlyToSpeed(100);  // don't filter camera motion
 
-  window.google.earth.fetchKml(ge, _modelURL? _modelURL: MODEL_URL,
+  window.google.earth.fetchKml(ge, _modelURL? _modelURL: basePath + MODEL_URL,
               function(obj) { me.finishInit(obj); });
   
 }
@@ -396,8 +396,13 @@ Plane.prototype.tick = function() {
   global.rotate(imgR);
   
   //me.tickPopups(dt);
-  me.cameraFollow(dt, gpos, me.localFrame);
-
+  if(cameraMode == "left"){
+	  global.cameraLeft();
+  }else if (cameraMode == "right"){
+	  global.cameraRight();
+  }else{
+	  me.cameraFollow(dt, gpos, me.localFrame);
+  }
   // Hack to work around focus bug
   // TODO: fix that bug and remove this hack.
   //ge.getWindow().blur();
@@ -750,7 +755,7 @@ function adjustPosHandler(event){
 	plane.adjustPosition();
 	
 }
-
+var reportObj;
 function startPlane(){
 	google.earth.addEventListener(ge, "frameend", afterFrameEnd);
 	gasButtonDown = true;
@@ -758,12 +763,18 @@ function startPlane(){
 	global.drawTarget();
 	global.cameraBack();
 	//message("目标角:"+plane.model.getOrientation().getHeading());
+	
+	reportObj= setInterval("reportPos()",1000);
 }
+
+
 
 function stopPlane(){
 	gasButtonDown = false;
 	plane.doTick = false;
 	google.earth.removeEventListener(ge, "frameend", afterFrameEnd);
+	
+	clearInterval(reportObj);
 }
 function moveToStart(){
 	moveTo(startPos);
@@ -788,6 +799,10 @@ function message(val,index){
 	if(!index)index = 0;
 	
 	el('inforBox'+index).value=val;
+}
+
+function reportPos(){
+	message("当前位置："+plane.model.getLocation().getLatitude()+","+plane.model.getLocation().getLongitude(),1);
 }
 
 function changeSpeed(v){

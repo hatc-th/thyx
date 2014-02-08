@@ -292,13 +292,16 @@ Global.prototype.cameraOnboard=function(){
          );
 	me.ge.getView().setAbstractView(la);
 	message (lo.getAltitude());
+	cameraMode = "back";
 };
+var cameraMode ; //left right back;
 //机尾视角
 Global.prototype.cameraBack=function(){
 	var me = this;
 	me.removePanel();
 	plane.cameraCut();
 	camHeadingOffset=0;
+	cameraMode = "back";
 };
 //左侧视角
 Global.prototype.cameraLeft=function(){
@@ -316,6 +319,7 @@ Global.prototype.cameraLeft=function(){
 	me.ge.getView().setAbstractView(la);
 	//camHeadingOffset=90;
 	message (lo.getAltitude());
+	cameraMode = "left";
 };
 //右侧视角
 Global.prototype.cameraRight=function(){
@@ -333,4 +337,5 @@ Global.prototype.cameraRight=function(){
 	me.ge.getView().setAbstractView(la);
 	//camHeadingOffset=-90;
 	message (lo.getAltitude());
+	cameraMode = "right";
 };
