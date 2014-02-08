@@ -40,6 +40,8 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
 <script type="text/javascript" src="./earthview/js/global.js" charset="utf-8"></script>
 <script type="text/javascript">
 
+var basePath ="<%=basePath %>";
+
 $(document).ready(function() {
 
 	$(".divShowScroll").niceScroll(
