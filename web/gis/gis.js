@@ -64,6 +64,10 @@ function init() {
 	//pop_init();
     map.on("extent-change", updateExtent); 
 
+	//与三维互动显示动画层 
+	startTyphoon(dojo.byId('pointText').value);
+	typhoonPathLayer = new esri.layers.GraphicsLayer();
+	map.addLayer(typhoonPathLayer);
 	/* 动画，还有问题
 	 typhoonPathLayer = new esri.layers.GraphicsLayer();
 	 map.addLayer(typhoonPathLayer);

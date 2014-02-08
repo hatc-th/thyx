@@ -3,9 +3,9 @@
 	<head>
 		<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
 		<title>地图api调用例子</title>
-<link rel="stylesheet" href="http://192.168.0.53:8080/arcgis_js_api/library/3.4/3.4/js/dojo/dijit/themes/tundra/tundra.css"> 
-<link rel="stylesheet" href="http://192.168.0.53:8080/arcgis_js_api/library/3.4/3.4/js/dojo/dijit/themes/claro/claro.css">
-<link rel="stylesheet" href="http://192.168.0.53:8080/arcgis_js_api/library/3.4/3.4/js/esri/css/esri.css">
+<link rel="stylesheet" href="http://192.168.1.20:8888/arcgis_js_api/library/3.4/3.4compact/js/dojo/dijit/themes/tundra/tundra.css"> 
+<link rel="stylesheet" href="http://192.168.1.20:8888/arcgis_js_api/library/3.4/3.4compact/js/dojo/dijit/themes/claro/claro.css">
+<link rel="stylesheet" href="http://192.168.1.20:8888/arcgis_js_api/library/3.4/3.4compact/js/esri/css/esri.css">
   <style> 
     #BasemapToggle { 
       position: absolute; 
@@ -19,7 +19,7 @@
 				parseOnLoad : true
 			}
 		</script>
-		<script type="text/javascript" src="http://192.168.0.53:8080/arcgis_js_api/library/3.4/3.4/init.js"></script>
+		<script type="text/javascript" src="http://192.168.1.20:8888/arcgis_js_api/library/3.4/3.4compact/init.js"></script>
 <!--
 		<link rel="stylesheet" href="http://localhost:9000/arcgis_js_api/library/3.7/jsapi/js/dojo/dijit/themes/tundra/tundra.css">
 		<link rel="stylesheet" href="http://localhost:9000/arcgis_js_api/library/3.7/jsapi/js/esri/css/esri.css">
@@ -31,6 +31,8 @@
 			};
 		</script>
 		<script type="text/javascript" src="./gis.js" charset="GBK"></script>
+		<script type="text/javascript" src="./gisLayer.js" charset="GBK"></script>
+		<script type="text/javascript" src="./showMove.js" charset="GBK"></script>
 		<script type="text/javascript" src="./drawSection.js"></script>
 		<script type="text/javascript" src="../js/flyPlan.js" charset="GBK"></script>
 	</head>
@@ -62,11 +64,8 @@
 		<input type="button" value="显示缩放栏" onclick="showZoomSlider();" />
 		8.
 		<input type="button" value="判断空域" onclick="judgeLineInterSects(dojo.byId('pointText').value);" />
-		<br/>
-		-----未实现-----
-		<input type="button" value="擦除线" onclick="executeDrawLine(dojo.byId('pointText').value, esri.symbol.SimpleLineSymbol.STYLE_SOLID, [255,0,0,0], 3);" />
-		7.
-		<button onclick="startTyphoon(dojo.byId('pointText').value)">
+		9.
+		<button onclick="gisMove()">
 			画移动轨迹
 		</button>
 		<br/>
