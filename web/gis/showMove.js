@@ -1,8 +1,8 @@
 /// <reference path="./jsapi_vsdoc10_v34.js" />
 
-//ÔÚ¶şÎ¬µØÍ¼ÖĞÏÔÊ¾ÈıÎ¬Ä£Äâ¹ì¼£ 
+//åœ¨äºŒç»´åœ°å›¾ä¸­æ˜¾ç¤ºä¸‰ç»´æ¨¡æ‹Ÿè½¨è¿¹ 
 
-//²âÊÔÓÃ
+//æµ‹è¯•ç”¨
 function startTyphoon(points) {
 	//clear();
 	_parseTyphoon(points);
@@ -10,14 +10,15 @@ function startTyphoon(points) {
 	//startMove();
 }
 
-//Çå³ıÏÔÊ¾µÄ¹ì¼£·ûºÅ
+//æ¸…é™¤æ˜¾ç¤ºçš„è½¨è¿¹ç¬¦å·
 function gisClear() {
-	map.graphics.clear();
+	map.graphics.remove(thegraphic);
+	/*map.graphics.clear();
 	typhoonPathLayer.clear();
-	Typhoon.current = {};
+	Typhoon.current = {};*/
 }
 
-// ²âÊÔÓÃ
+// æµ‹è¯•ç”¨
 function gisMove() {
 	//_convertPathList();
 	Typhoon.current.moveRunning = true;
@@ -29,11 +30,8 @@ function gisMove() {
 	}
 }
 
-// ÏÔÊ¾¹ì¼£µã£¬x--¾­¶È£¬ÀıÈç104.736, y--Î³¶È£¬ÀıÈç31.43458
+// æ˜¾ç¤ºè½¨è¿¹ç‚¹ï¼Œx--ç»åº¦ï¼Œä¾‹å¦‚104.736, y--çº¬åº¦ï¼Œä¾‹å¦‚31.43458
 function showCurrent(x, y) {
 	map.graphics.remove(thegraphic);
 	addPointToMap(new esri.geometry.Point(x, y));
 }
-
-
-
