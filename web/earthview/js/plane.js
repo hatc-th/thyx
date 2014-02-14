@@ -164,7 +164,7 @@ Plane.prototype.tick = function() {
     dt = 0.25;
   }
   me.lastMillis = now;
-  message("ticking..."+me.lastMillis);
+  //message("ticking..."+me.lastMillis);
   var c0 = 1;
   var c1 = 0;
 
@@ -274,11 +274,15 @@ Plane.prototype.tick = function() {
       // Accelerate forwards.
       me.checkPoints();
       me.vel = V3.add(me.vel, V3.scale(dir, ACCEL * dt));
+      message("forwardSpeed..."+V3.dot(dir, me.vel) + "\n dir:" + dir + "\n ");
+      message("vel:" + me.vel + "\n scale:" + V3.scale(dir, ACCEL * dt),1) ;
+      
     } else if (reverseButtonDown) {
       if (forwardSpeed > -MAX_REVERSE_SPEED)
         me.vel = V3.add(me.vel, V3.scale(dir, -DECEL * dt));
     }
   }
+  
 
   // Air drag.
   //
@@ -400,6 +404,8 @@ Plane.prototype.tick = function() {
 	  global.cameraLeft();
   }else if (cameraMode == "right"){
 	  global.cameraRight();
+  }else if (cameraMode == "board"){
+	  global.cameraOnboard();
   }else{
 	  me.cameraFollow(dt, gpos, me.localFrame);
   }
@@ -496,32 +502,77 @@ Plane.prototype.cameraFollow = function(dt, truckPos, localToGlobalFrame) {
 //var 
 
 //heading is optional.
-Plane.prototype.teleportTo = function(lat, lon, heading) {
-var me = this;
-//添加事件使飞机的位置变化能及时显示，解决了由于在不同的地点取一个点的海拔高度不一致的问题
-google.earth.addEventListener(ge, "frameend", adjustPosHandler);
-me.model.getLocation().setLatitude(lat);
-me.model.getLocation().setLongitude(lon);
-me.tempAlt = HEIGHT + ge.getGlobe().getGroundAltitude(lat, lon);
-var alt = ge.getGlobe().getGroundAltitude(lat, lon);
-me.model.getLocation().setAltitude(HEIGHT + alt);
+Plane.prototype.teleportTo = function(lat, lon, heading , absALT) {
+	var me = this;
 
-if (heading == null) {
- heading = 0;
-}
-me.vel = [0, 0, 0];
+	me.model.getLocation().setLatitude(lat);
+	me.model.getLocation().setLongitude(lon);
+	var finalALt = 0;
+	var alt = ge.getGlobe().getGroundAltitude(lat, lon);
+	me.tempAlt = HEIGHT + alt;
+	
+	if(!absALT){
+		//添加事件使飞机的位置变化能及时显示，解决了由于在不同的地点取一个点的海拔高度不一致的问题
+		google.earth.addEventListener(ge, "frameend", adjustPosHandler);
+		finalALt = HEIGHT + alt;
+	}else{
+		finalALt = absALT;
+	}
+	me.model.getLocation().setAltitude( finalALt );
+	
+	if (heading == null) {
+		heading = 0;
+	}
+	me.vel = [0, 0, 0];
 
-me.localAnchorLla = [lat, lon, 0];
-me.localAnchorCartesian = V3.latLonAltToCartesian(me.localAnchorLla);
-me.localFrame = M33.makeLocalToGlobalFrame(me.localAnchorLla);
-me.modelFrame = M33.identity();
-me.modelFrame[0] = V3.rotate(me.modelFrame[0], me.modelFrame[2], -heading);
-me.modelFrame[1] = V3.rotate(me.modelFrame[1], me.modelFrame[2], -heading);
-me.pos = [0, 0, ge.getGlobe().getGroundAltitude(lat, lon)];
+	me.localAnchorLla = [lat, lon, 0];
+	me.localAnchorCartesian = V3.latLonAltToCartesian(me.localAnchorLla);
+	me.localFrame = M33.makeLocalToGlobalFrame(me.localAnchorLla);
+	me.modelFrame = M33.identity();
+	me.modelFrame[0] = V3.rotate(me.modelFrame[0], me.modelFrame[2], -heading);
+	me.modelFrame[1] = V3.rotate(me.modelFrame[1], me.modelFrame[2], -heading);
+	me.pos = [0, 0, finalALt];
 
-me.cameraCut();
+	me.cameraCut();
 };
 
+Plane.prototype.teleportToRoutePoint =  function(lat, lon){
+	var me = this;
+	
+	var targetIndex = -1;
+	//判断输入的点距航线上各点的距离，找出下一个目标点，作为飞行的方向
+	if(linePoints.length==2){
+		targetIndex = 1;
+	}else{//航线点大于2 的情况
+		var dis = [];
+		for(var i=0;i< linePoints.length ;i++){
+			var dst= getDistance(lat, lon, linePoints[i][0], linePoints[i][1]);
+			if(i<2){
+				dis[i]=[i,dst];
+			}else{
+				if(dst < dis[0][1]){
+					dis[1] = dis[0][1]<dis[1][1]?dis[0]:dis[1];
+					dis[0] = [i,dst];
+				}else{
+					if(dst<dis[1][1]){
+						dis[1] = [i,dst];
+					}
+				}
+			}
+		}
+		targetIndex = dis[0][0] > dis[1][0] ? dis[0][0] : dis[1][0] ; 
+	}
+	
+	currentIndex = targetIndex;
+	currentTarget = linePoints[targetIndex];
+	currentHeading = getAngle( [lat,lon,0], currentTarget);
+	 
+	me.model.getOrientation().setHeading(currentHeading) ;
+	
+	me.teleportTo(lat, lon, currentHeading /180 * Math.PI,FLIGHTHEIGHT);
+	
+	
+}
 // Move our anchor closer to our current position.  Retain our global
 // motion state (position, orientation, velocity).
 Plane.prototype.adjustAnchor = function() {
@@ -633,15 +684,15 @@ Plane.prototype.checkPoints = function (){
 		currentIndex=1;
 		lastTarget = chkPoints[0];
 		currentTarget = chkPoints[1] ;
+		global.removeTargets();
 		global.drawTarget();
-	//}else if( V3.earthDistance(curPos,currentTarget) < 200   ){
 	}
 	var dist= getDistance(curPos[0],curPos[1],currentTarget[0],currentTarget[1]);
-	if( dist < 400   ){	
+	if( dist < 2000   ){	
 		currentIndex++;
 		if(currentIndex==chkPoints.length ){
 			if(dist<=10){
-				stop();
+				stopPlane();
 				alert("到达目的地 !" );
 				return;
 			}
@@ -649,6 +700,7 @@ Plane.prototype.checkPoints = function (){
 		}
 		lastTarget=currentTarget;
 		currentTarget = chkPoints[currentIndex] ;
+		global.removeTargets();
 		global.drawTarget();
 	}
 	
@@ -758,10 +810,12 @@ function adjustPosHandler(event){
 var reportObj;
 function startPlane(){
 	google.earth.addEventListener(ge, "frameend", afterFrameEnd);
+	global.removeTargets();
+	global.drawTarget();
+	
 	gasButtonDown = true;
 	plane.doTick = true;
-	global.drawTarget();
-	global.cameraBack();
+	//global.cameraBack();
 	//message("目标角:"+plane.model.getOrientation().getHeading());
 	
 	reportObj= setInterval("reportPos()",1000);
@@ -780,11 +834,13 @@ function moveToStart(){
 	moveTo(startPos);
 }
 function moveToNext(){
-	if(currentIndex<chkPoints.length-1){
-		moveTo(chkPoints[currentIndex+1]);
-	}else{
-		moveTo(endPos);
-	}
+//	if(currentIndex<chkPoints.length-1){
+//		moveTo(chkPoints[currentIndex+1]);
+//	}else{
+//		moveTo(endPos);
+//	}
+	
+	plane.teleportToRoutePoint( 31.368632578694864,104.99279158947874 );
 }
 function moveToEnd(){
 	moveTo(endPos);
@@ -803,6 +859,7 @@ function message(val,index){
 
 function reportPos(){
 	message("当前位置："+plane.model.getLocation().getLatitude()+","+plane.model.getLocation().getLongitude(),1);
+	showCurrent(plane.model.getLocation().getLongitude(), plane.model.getLocation().getLatitude());
 }
 
 function changeSpeed(v){

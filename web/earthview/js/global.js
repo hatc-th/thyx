@@ -9,11 +9,13 @@ window.ge =null;
 window.global = null;
 
 function runGlobal(){
-	if(window.global){
+	if(window.global){ //退出仿真，清理环境
+		stopPlane();
 		window.global.hide();
 		window.ge =null;
 		window.global = null;
-	}else{
+		gisClear();
+	}else{//加载仿真环境
 		window.global= new Global();
 		window.global.show();
 		window.global.init();
@@ -90,9 +92,9 @@ Global.prototype.init = function() {
 		me.ge.getLayerRoot().enableLayerById(ge.LAYER_BUILDINGS, true); // /建筑
 		me.ge.getLayerRoot().enableLayerById(ge.LAYER_BORDERS, true); // 边界
 
-		me.ge.getNavigationControl().setVisibility(ge.VISIBILITY_SHOW);//显示罗盘
+		me.ge.getNavigationControl().setVisibility(ge.VISIBILITY_AUTO);//显示罗盘
 		
-		me.ge.getOptions().setStatusBarVisibility(true); //显示状态栏 
+		//me.ge.getOptions().setStatusBarVisibility(true); //显示状态栏 
 		me.ge.getOptions().setFlyToSpeed(ge.SPEED_TELEPORT);
 		me.plane = new Plane();
 		plane= me.plane;
@@ -173,7 +175,6 @@ Global.prototype.drawRoute = function() {
 
 Global.prototype.drawTarget = function() {
 	var me = this;
-	me.removeTargets();
 	// Create the placemark.
 	var placemark = me.ge.createPlacemark('');
 	placemark.setName("目标点");
@@ -200,15 +201,20 @@ Global.prototype.removeTargets = function() {
 
 Global.prototype.addPanel = function() {
 	var me = this;
-
-	with (me) {
+		if(me.panelMask){
+			return;
+		}
+		
 		// Create the panelMask.
-		panelMask = ge.createScreenOverlay('');
-
+		me.panelMask = me.ge.createScreenOverlay('');
 		// Specify a path to the image and set as the icon.
-		var icon = ge.createIcon('');
-		icon.setHref('http://127.0.0.1:8080/EarthView/resource/icon_cessna172.png');
-		panelMask.setIcon(icon);
+		if(!me.panelMask){
+			return;
+		}
+		
+		var icon = me.ge.createIcon('');
+		icon.setHref(basePath + 'earthview/resource/icon_cessna172_.png');
+		me.panelMask.setIcon(icon);
 
 		// Important note: due to a bug in the API, screenXY and overlayXY
 		// have opposite meanings than their KML counterparts. This means
@@ -220,29 +226,28 @@ Global.prototype.addPanel = function() {
 		// not break.
 
 		// Set the panelMask's position in the window.
-		panelMask.getOverlayXY().setXUnits(ge.UNITS_PIXELS);
-		panelMask.getOverlayXY().setYUnits(ge.UNITS_PIXELS);
-		panelMask.getOverlayXY().setX(512);
-		panelMask.getOverlayXY().setY(288);
+		me.panelMask.getOverlayXY().setXUnits(me.ge.UNITS_PIXELS);
+		me.panelMask.getOverlayXY().setYUnits(me.ge.UNITS_PIXELS);
+		me.panelMask.getOverlayXY().setX(512);
+		me.panelMask.getOverlayXY().setY(0);
 
 		// Specify the point in the image around which to rotate.
-		panelMask.getRotationXY().setXUnits(ge.UNITS_FRACTION);
-		panelMask.getRotationXY().setYUnits(ge.UNITS_FRACTION);
-		panelMask.getRotationXY().setX(0.5);
-		panelMask.getRotationXY().setY(0.5);
+		me.panelMask.getRotationXY().setXUnits(me.ge.UNITS_FRACTION);
+		me.panelMask.getRotationXY().setYUnits(me.ge.UNITS_FRACTION);
+		me.panelMask.getRotationXY().setX(0.5);
+		me.panelMask.getRotationXY().setY(0.5);
 
 		// Set the overlay's size in pixels.
-		panelMask.getSize().setXUnits(ge.UNITS_PIXELS);
-		panelMask.getSize().setYUnits(ge.UNITS_PIXELS);
-		panelMask.getSize().setX(1536);
-		panelMask.getSize().setY(864);
+		me.panelMask.getSize().setXUnits(me.ge.UNITS_PIXELS);
+		me.panelMask.getSize().setYUnits(me.ge.UNITS_PIXELS);
+		me.panelMask.getSize().setX(1536);
+		me.panelMask.getSize().setY(321);
 
 		// Rotate the overlay.
-		panelMask.setRotation(0);
+		me.panelMask.setRotation(0);
 
 		// Add the panelMask to Earth.
-		ge.getFeatures().appendChild(panelMask);
-	}
+		me.ge.getFeatures().appendChild(me.panelMask);
 }
 
 Global.prototype.removePanel = function() {
@@ -280,7 +285,6 @@ Global.prototype.cameraMove=function(lat,lon){
 //舱内视角
 Global.prototype.cameraOnboard=function(){
 	var me = this;
-	me.addPanel();
 	var lo = plane.model.getLocation();
 	var la = me.ge.createLookAt('');
 	la.set(lo.getLatitude(), lo.getLongitude(),
@@ -291,14 +295,12 @@ Global.prototype.cameraOnboard=function(){
          0 /* range */
          );
 	me.ge.getView().setAbstractView(la);
-	message (lo.getAltitude());
-	cameraMode = "back";
+	cameraMode = "board";
 };
 var cameraMode ; //left right back;
 //机尾视角
 Global.prototype.cameraBack=function(){
 	var me = this;
-	me.removePanel();
 	plane.cameraCut();
 	camHeadingOffset=0;
 	cameraMode = "back";
@@ -306,7 +308,6 @@ Global.prototype.cameraBack=function(){
 //左侧视角
 Global.prototype.cameraLeft=function(){
 	var me = this;
-	me.removePanel();
 	var lo = plane.model.getLocation();
 	var la = me.ge.createLookAt('');
 	la.set(lo.getLatitude(), lo.getLongitude(),
@@ -318,13 +319,11 @@ Global.prototype.cameraLeft=function(){
          );
 	me.ge.getView().setAbstractView(la);
 	//camHeadingOffset=90;
-	message (lo.getAltitude());
 	cameraMode = "left";
 };
 //右侧视角
 Global.prototype.cameraRight=function(){
 	var me = this;
-	me.removePanel();
 	var lo = plane.model.getLocation();
 	var la = me.ge.createLookAt('');
 	la.set(lo.getLatitude(), lo.getLongitude(),
@@ -336,6 +335,5 @@ Global.prototype.cameraRight=function(){
          );
 	me.ge.getView().setAbstractView(la);
 	//camHeadingOffset=-90;
-	message (lo.getAltitude());
 	cameraMode = "right";
 };
