@@ -14,7 +14,7 @@ var STEER_ROLL = -1.0;
 var ROLL_SPRING = 0.25;
 var ROLL_DAMP = -0.16;
 
-var ACCEL =100; 
+var ACCEL = 100 ; 
 
 function Plane(_modelURL) {
   var me = this;
@@ -273,9 +273,7 @@ Plane.prototype.tick = function() {
     if (gasButtonDown) {
       // Accelerate forwards.
       me.checkPoints();
-      me.vel = V3.add(me.vel, V3.scale(dir, ACCEL * dt));
-      message("forwardSpeed..."+V3.dot(dir, me.vel) + "\n dir:" + dir + "\n ");
-      message("vel:" + me.vel + "\n scale:" + V3.scale(dir, ACCEL * dt),1) ;
+      me.vel = V3.add(me.vel, V3.scale(dir, ACCEL * dt)); // V = V0 + a * t
       
     } else if (reverseButtonDown) {
       if (forwardSpeed > -MAX_REVERSE_SPEED)
@@ -335,8 +333,9 @@ Plane.prototype.tick = function() {
   me.pos = V3.add(me.pos, deltaPos);
   
   el('vel').value=Math.round(forwardSpeed * 3.6);
+  me.forwardSpeed = forwardSpeed;
   el('height').value=Math.round(me.pos[2]/10)*10;
-  
+  el('heading').value= me.model.getOrientation().getHeading();
   gpos = V3.add(me.localAnchorCartesian,
                 M33.transform(me.localFrame, me.pos));
   lla = V3.cartesianToLatLonAlt(gpos);
@@ -515,15 +514,16 @@ Plane.prototype.teleportTo = function(lat, lon, heading , absALT) {
 		//添加事件使飞机的位置变化能及时显示，解决了由于在不同的地点取一个点的海拔高度不一致的问题
 		google.earth.addEventListener(ge, "frameend", adjustPosHandler);
 		finalALt = HEIGHT + alt;
+		me.vel = [0, 0, 0];
 	}else{
 		finalALt = absALT;
+		
 	}
 	me.model.getLocation().setAltitude( finalALt );
 	
 	if (heading == null) {
 		heading = 0;
 	}
-	me.vel = [0, 0, 0];
 
 	me.localAnchorLla = [lat, lon, 0];
 	me.localAnchorCartesian = V3.latLonAltToCartesian(me.localAnchorLla);
@@ -533,6 +533,10 @@ Plane.prototype.teleportTo = function(lat, lon, heading , absALT) {
 	me.modelFrame[1] = V3.rotate(me.modelFrame[1], me.modelFrame[2], -heading);
 	me.pos = [0, 0, finalALt];
 
+	if(absALT){
+		me.vel = V3.scale(me.modelFrame[1] , me.forwardSpeed);
+	}
+	
 	me.cameraCut();
 };
 
@@ -566,7 +570,6 @@ Plane.prototype.teleportToRoutePoint =  function(lat, lon){
 	currentIndex = targetIndex;
 	currentTarget = linePoints[targetIndex];
 	currentHeading = getAngle( [lat,lon,0], currentTarget);
-	 
 	me.model.getOrientation().setHeading(currentHeading) ;
 	
 	me.teleportTo(lat, lon, currentHeading /180 * Math.PI,FLIGHTHEIGHT);
@@ -688,10 +691,10 @@ Plane.prototype.checkPoints = function (){
 		global.drawTarget();
 	}
 	var dist= getDistance(curPos[0],curPos[1],currentTarget[0],currentTarget[1]);
-	if( dist < 2000   ){	
+	if( dist < 1000   ){	
 		currentIndex++;
 		if(currentIndex==chkPoints.length ){
-			if(dist<=10){
+			if(dist<=1000){
 				stopPlane();
 				alert("到达目的地 !" );
 				return;
@@ -760,6 +763,9 @@ function prepareRoute(){
 	//startPos = [30.57833333 , 103.9466667, 0];
 	//startPos = [31.3874166665,104.70006942500001,0];
 	//endPos = [31.43	, 104.7397222 ,0];
+	chkPoints =[];
+	currentTarget=null;
+	currentIndex=-1;
 	
 	chkPoints= getLinePoints (startPos,endPos,20 );
 	plane.checkPoints();
@@ -834,13 +840,14 @@ function moveToStart(){
 	moveTo(startPos);
 }
 function moveToNext(){
-//	if(currentIndex<chkPoints.length-1){
-//		moveTo(chkPoints[currentIndex+1]);
-//	}else{
-//		moveTo(endPos);
-//	}
-	
-	plane.teleportToRoutePoint( 31.368632578694864,104.99279158947874 );
+	stopPlane();
+	if(currentIndex<chkPoints.length-1){
+		plane.teleportToRoutePoint(chkPoints[currentIndex][0],chkPoints[currentIndex][1]);
+	}else{
+		plane.teleportToRoutePoint(endPos[0],endPos[1]);
+	}
+	//( 31.368632578694864,104.99279158947874 );
+	startPlane();
 }
 function moveToEnd(){
 	moveTo(endPos);

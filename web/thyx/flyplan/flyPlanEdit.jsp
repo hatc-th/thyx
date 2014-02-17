@@ -1017,25 +1017,22 @@ function clearGraphicInfoByCode() {
 		<input type="input" style="width:60px;" value="0" id="vel"  readonly /><span style="color: #FFFFFF" >km/h</span>
 		<input type="button" value="加速" onclick="changeSpeed(20);" />
 		<input type="button" value="减速" onclick="changeSpeed(-20);" />
-		<input type="button" value="舱内视角" onclick="global.cameraOnboard();" />
-		<input type="button" value="舱外视角" onclick="global.cameraBack();" />
-		<input type="button" value="右侧视角" onclick="global.cameraRight();" />
-		<input type="button" value="左侧视角" onclick="global.cameraLeft();" />
+		<input type="button" value="舱内视角" onclick="global.addPanel();global.cameraOnboard();" />
+		<input type="button" value="舱外视角" onclick="global.removePanel();global.cameraBack();" />
+		<input type="button" value="右侧视角" onclick="global.removePanel();global.cameraRight();" />
+		<input type="button" value="左侧视角" onclick="global.removePanel();global.cameraLeft();" />
 		<br/>
 		
 		<span style="color: #FFFFFF" >高度</span><input type="input" style="width:60px;" value="0" id="height"  readonly />
-		<input type="button" value="上升" onclick="" />
-		<input type="button" value="下降" onclick="" />
 		
 		<span style="color: #FFFFFF" >目标点：</span><input type="input" style="width:50px;" value="0" id="target"  readonly />
 		<span style="color: #FFFFFF" >纬度</span><input type="input" style="width:60px;" value="0" id="targetLa"  readonly />
 		<span style="color: #FFFFFF" >经度</span><input type="input" style="width:60px;" value="0" id="targetLo"  readonly />
 		
 		<span style="color: #FFFFFF" >距离</span><input type="input" style="width:60px;" value="0" id="dis"  readonly />
-		<span style="color: #FFFFFF" >朝向</span><input type="input" style="width:60px;" value="0" id="targetR"  readonly /><br/>
-		
+		<span style="color: #FFFFFF" >目标朝向</span><input type="input" style="width:60px;" value="0" id="targetR"  readonly />
+		<span style="color: #FFFFFF" >当前朝向</span><input type="input" style="width:60px;" value="0" id="heading"  readonly /><br/>
 		<input type="button" value="go" onclick="go()" /> 
-		<input type="button" value="look at me" onclick="plane.cameraCut();message(plane.)" /> 
 		<input type="button" value="计算航线" onclick="prepareRoute();" />
 		<input type="button" value="转到起点" onclick="moveToStart();" />
 		<input type="button" value="转到下一点" onclick="moveToNext();" />
