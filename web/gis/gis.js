@@ -14,10 +14,12 @@ dojo.require("dijit.Menu");
 dojo.require("dijit.TooltipDialog");
 dojo.require("dijit.layout.ContentPane");
 dojo.require("dijit.layout.TabContainer");
-//dojo.require("dijit.registry");
-//dojo.require("dojo.base.connect");
-//dojo.require("dojo.json");
-///dojo.require("dojo._base_fx");
+dojo.require("dijit.MenuItem");
+//dojo.require("esri.tasks.GeometryService");
+//dojo.require("esri.symbol.SimpleFillSymbol");
+dojo.require("esri.geometry.Point");
+dojo.require("esri.toolbars.edit");
+
 var projectName = "/thyx";
 var map, toolbar, symbol, geomTask, infoTemplate, typhoonPathLayer;
 var pointQueryResult, lineDrawResult, mpJson, polyline;
@@ -28,6 +30,7 @@ var featureLayer_1, featureLayer_2, featureLayer_3, pre_level = 5000000;
 //var longitude,latitude;
 var imageryPrime;
 var shAsPaneGraphicId = "shAsPane";
+var editToolbar, ctxMenuForMap;
 
 function init() {
 	map = new esri.Map("map", {scale:pre_level,center:[106.63,29.71],logo:false});
@@ -64,10 +67,11 @@ function init() {
 	//pop_init();
     map.on("extent-change", updateExtent); 
 
+	createMapMenu(); //右键菜单，在任意位置点击设为航路点
 	//与三维互动显示动画层 
-	startTyphoon(dojo.byId('pointText').value);
-	typhoonPathLayer = new esri.layers.GraphicsLayer();
-	map.addLayer(typhoonPathLayer);
+	//startTyphoon(dojo.byId('pointText').value);
+	//typhoonPathLayer = new esri.layers.GraphicsLayer();
+	//map.addLayer(typhoonPathLayer);
 	/* 动画，还有问题
 	 typhoonPathLayer = new esri.layers.GraphicsLayer();
 	 map.addLayer(typhoonPathLayer);
@@ -76,6 +80,58 @@ function init() {
 	//面符号
 	PolygonSymbol = new esri.symbol.SimpleFillSymbol(esri.symbol.SimpleFillSymbol.STYLE_SOLID, new esri.symbol.SimpleLineSymbol(esri.symbol.SimpleLineSymbol.STYLE_DASHDOT, new dojo.Color([255, 0, 0]), 1), new dojo.Color([255, 255, 0, 0.25]));
 }
+
+function createMapMenu() {
+    // Creates right-click context menu for map
+    ctxMenuForMap = new dijit.Menu({
+      onOpen: function(box) {
+        // Lets calculate the map coordinates where user right clicked.
+        // We'll use this to create the graphic when the user clicks
+        // on the menu item to "Add Point"
+        currentLocation = getMapPointFromMenuPosition(box);          
+        //editToolbar.deactivate();
+      }
+    });
+
+    ctxMenuForMap.addChild(new dijit.MenuItem({ 
+      label: "设为航线点",
+      onClick: function(evt) {
+			controlNode('18','','','"+geometryJsonUtils.fromJson(currentLocation.toJson())+"');
+      }
+    }));
+
+    ctxMenuForMap.addChild(new dijit.MenuItem({ 
+        label: "在三维仿真中移动到此",
+        onClick: function(evt) {
+        	plane = new Plane();
+        	plane.teleportToRoutePoint(currentLocation.x, currentLocation.y);
+        }
+      }));
+    
+    ctxMenuForMap.startup();
+    ctxMenuForMap.bindDomNode(map.container);
+}
+
+// Helper Methods
+function getMapPointFromMenuPosition(box) {
+  var x = box.x, y = box.y;
+  switch( box.corner ) {
+    case "TR":
+      x += box.w;
+      break;
+    case "BL":
+      y += box.h;
+      break;
+    case "BR":
+      x += box.w;
+      y += box.h;
+      break;
+  }
+
+  var screenPoint = new esri.geometry.Point(x - map.position.x, y - map.position.y);
+  return map.toMap(screenPoint);
+}
+
 // 显示或隐藏三个点击菜单层
 function updateExtent() { 
     //var scaleLevel = map.getLevel();
@@ -118,6 +174,14 @@ function createToolbar(map) {
 	dojo.connect(toolbar, "onDrawEnd", addToMap);
 	//executeDrawLine(null);
 	dojo.connect(map, "onMouseDown", showCoordinates);
+
+    // Create and setup editing tools
+    editToolbar = new esri.toolbars.edit(map);
+
+    map.on("click", function(evt) {
+      editToolbar.deactivate();
+    });
+	
 }
 
 dojo.addOnLoad(init);
