@@ -100,6 +100,8 @@ function createMapMenu() {
       }
     }));
 
+    ctxMenuForMap.addChild(new dijit.MenuSeparator());
+    
     ctxMenuForMap.addChild(new dijit.MenuItem({ 
         label: "在三维仿真中移动到此",
         onClick: function(evt) {
