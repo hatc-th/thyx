@@ -575,6 +575,11 @@ Plane.prototype.teleportToRoutePoint =  function(lat, lon){
 	currentIndex = targetIndex;
 	currentTarget = linePoints[targetIndex];
 	currentHeading = getAngle( [lat,lon,0], currentTarget);
+	if(!currentHeading){
+		currentIndex = targetIndex+1;
+		currentTarget = linePoints[targetIndex+1];
+		currentHeading = getAngle( [lat,lon,0], currentTarget);
+	}
 	me.model.getOrientation().setHeading(currentHeading) ;
 	
 	me.teleportTo(lat, lon, currentHeading /180 * Math.PI,FLIGHTHEIGHT);
@@ -784,6 +789,7 @@ function go(){
 	currentTarget=null;
 	flight_distance=0;
 	index_hightlight_point=0;
+	cc.planeStart();
 	prepareRoute();
 	moveToStart();
 	startPlane();
@@ -811,7 +817,7 @@ Plane.prototype.adjustPosition = function (){
 	
 };
 
-function afterFrameEnd(event){
+function afterFrameEnd(event){message("ticking..."+plane.lastMillis);
 	if(plane.doTick){
 		plane.tick();
 	}

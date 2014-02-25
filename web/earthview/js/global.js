@@ -151,7 +151,6 @@ Global.prototype.drawRoute = function() {
 	if (me.routePlacemark) {
 		me.ge.getFeatures().removeChild(me.routePlacemark);
 	}
-
 	// Create the LineString
 	var lineString = me.ge.createLineString('');
 	// Add LineString points
@@ -180,6 +179,35 @@ Global.prototype.drawRoute = function() {
 	me.ge.getFeatures().appendChild(me.routePlacemark);
 
 	me.routePlacemark.setName('航线');
+}
+
+
+var lastPos =null;
+var linePlacemark = [];
+//@param : [lat,lon,alt]
+Global.prototype.drawRoute2=function( pos ){
+	var me =this;
+	// Create the LineString
+	var lineString = me.ge.createLineString('');
+	var lineStringPlacemark = me.ge.createPlacemark('');
+	linePlacemark[linePlacemark.length] = lineStringPlacemark;
+	lineStringPlacemark.setGeometry(lineString);
+	me.route = lineString;
+	
+	if(lastPos ==null) lastPos = [startPos[0], startPos[1],0];
+	lineString.getCoordinates().pushLatLngAlt(lastPos[0], lastPos[1], lastPos[2]);
+	//lineString.getCoordinates().pushLatLngAlt(pos[0], pos[1], pos[2]);
+	
+	lineString.setTessellate(true);
+	lineString.setAltitudeMode(me.ge.ALTITUDE_ABSOLUTE);
+
+	lineStringPlacemark.setStyleSelector(me.ge.createStyle(''));
+	var lineStyle = lineStringPlacemark.getStyleSelector().getLineStyle();
+	lineStyle.setWidth(2);
+	lineStyle.getColor().set('ffff0000');
+
+	me.ge.getFeatures().appendChild(lineStringPlacemark);
+	lastPos  = pos;
 }
 
 Global.prototype.drawTarget = function() {
@@ -390,32 +418,6 @@ Global.prototype.cameraRight=function(){
 	cameraMode = "right";
 };
 
-var lastPos =null;
-//@param : [lat,lon,alt]
-Global.prototype.drawRoute2=function( pos ){
-	var me =this;
-	// Create the LineString
-	var lineString = me.ge.createLineString('');
-	var lineStringPlacemark = me.ge.createPlacemark('');
-	lineStringPlacemark.setGeometry(lineString);
-	me.route = lineString;
-	
-	if(lastPos ==null) lastPos = [startPos[0], startPos[1],0];
-	lineString.getCoordinates().pushLatLngAlt(lastPos[0], lastPos[1], lastPos[2]);
-	//lineString.getCoordinates().pushLatLngAlt(pos[0], pos[1], pos[2]);
-	
-	lineString.setTessellate(true);
-	lineString.setAltitudeMode(me.ge.ALTITUDE_ABSOLUTE);
-
-	lineStringPlacemark.setStyleSelector(me.ge.createStyle(''));
-	var lineStyle = lineStringPlacemark.getStyleSelector().getLineStyle();
-	lineStyle.setWidth(2);
-	lineStyle.getColor().set('ffff0000');
-
-	me.ge.getFeatures().appendChild(lineStringPlacemark);
-	lastPos  = pos;
-}
-
 Global.prototype.addRoutePoint=function( pos ){
 	var me =this;
 	me.route.getCoordinates().pushLatLngAlt(pos[0], pos[1], pos[2]);
@@ -505,7 +507,7 @@ function elevationPathCallback (results, status){
   	    	if(i==0){
   	    		flightDataArray[i]=elevationDataArray[i];
   	    	}else{
-  	    		flightDataArray[i]=[pto.distance,FLIGHTHEIGHT];
+  	    		flightDataArray[i]=[pto.distance,FLIGHTHEIGHT,results[i].location.d,results[i].location.e];
   	    	}
   	    	
   	    }
@@ -597,10 +599,12 @@ ControlCenter.prototype.jumpTo = function (lat ,lon , _distance ){
 	}
 	
 	if(plane){
-		stopPlane();
-		plane.teleportToRoutePoint(lat,lon);
 		if(plane.isMove()){
+			stopPlane();
+			plane.teleportToRoutePoint(lat,lon);
 			startPlane();
+		}else{
+			plane.teleportToRoutePoint(lat,lon);
 		}
 	}
 };
@@ -638,5 +642,9 @@ ControlCenter.prototype.targetChange = function(_i){
 };
 
 ControlCenter.prototype.planeStart = function(){
+	lastPos=null;
+	for (i=0 ;i<linePlacemark.length ;i++){
+		global.ge.getFeatures().removeChild(linePlacemark[i]);
+	}
 	
 };
