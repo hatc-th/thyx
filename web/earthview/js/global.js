@@ -14,11 +14,13 @@ function runGlobal(){
 		window.global.hide();
 		window.ge =null;
 		window.global = null;
+		window.plane = null;
 		gisClear();
 	}else{//加载仿真环境
 		window.global= new Global();
 		window.global.show();
 		window.global.init();
+		draw();
 	}
 	
 }
@@ -34,6 +36,8 @@ function Global() {
 	// 路径点
 	me.targetPlacemarks = [];
 	me.panelMask = null;
+	
+	cc.global = me; 
 }
 
 Global.prototype.show = function() {
@@ -94,7 +98,11 @@ Global.prototype.init = function() {
 
 		me.ge.getNavigationControl().setVisibility(ge.VISIBILITY_AUTO);//显示罗盘
 		
-		//me.ge.getOptions().setStatusBarVisibility(true); //显示状态栏 
+		//地形精度
+		ge.getLayerRoot().enableLayerById(ge.LAYER_TERRAIN, true);
+		ge.getOptions().setTerrainExaggeration(1.0);//2.0
+		
+		me.ge.getOptions().setStatusBarVisibility(true); //显示状态栏 
 		me.ge.getOptions().setFlyToSpeed(ge.SPEED_TELEPORT);
 		me.plane = new Plane();
 		plane= me.plane;
@@ -138,11 +146,11 @@ function updateOptions() {
 
 Global.prototype.drawRoute = function() {
 	var me = this;
-
+	me.drawRoute2();
+	return;
 	if (me.routePlacemark) {
 		me.ge.getFeatures().removeChild(me.routePlacemark);
 	}
-
 	// Create the LineString
 	var lineString = me.ge.createLineString('');
 	// Add LineString points
@@ -173,11 +181,40 @@ Global.prototype.drawRoute = function() {
 	me.routePlacemark.setName('航线');
 }
 
+
+var lastPos =null;
+var linePlacemark = [];
+//@param : [lat,lon,alt]
+Global.prototype.drawRoute2=function( pos ){
+	var me =this;
+	// Create the LineString
+	var lineString = me.ge.createLineString('');
+	var lineStringPlacemark = me.ge.createPlacemark('');
+	linePlacemark[linePlacemark.length] = lineStringPlacemark;
+	lineStringPlacemark.setGeometry(lineString);
+	me.route = lineString;
+	
+	if(lastPos ==null) lastPos = [startPos[0], startPos[1],0];
+	lineString.getCoordinates().pushLatLngAlt(lastPos[0], lastPos[1], lastPos[2]);
+	//lineString.getCoordinates().pushLatLngAlt(pos[0], pos[1], pos[2]);
+	
+	lineString.setTessellate(true);
+	lineString.setAltitudeMode(me.ge.ALTITUDE_ABSOLUTE);
+
+	lineStringPlacemark.setStyleSelector(me.ge.createStyle(''));
+	var lineStyle = lineStringPlacemark.getStyleSelector().getLineStyle();
+	lineStyle.setWidth(2);
+	lineStyle.getColor().set('ffff0000');
+
+	me.ge.getFeatures().appendChild(lineStringPlacemark);
+	lastPos  = pos;
+}
+
 Global.prototype.drawTarget = function() {
 	var me = this;
 	// Create the placemark.
 	var placemark = me.ge.createPlacemark('');
-	placemark.setName("目标点");
+	placemark.setName(currentTarget[2]?currentTarget[2]:'');
 	// Set the placemark's location.
 	var point = me.ge.createPoint('');
 	point.setLatitude(currentTarget[0]);
@@ -198,6 +235,42 @@ Global.prototype.removeTargets = function() {
 		me.ge.getFeatures().removeChild(me.targetPlacemarks[i]);
 	}
 };
+
+Global.prototype.drawZone = function(points) {
+	//绘制空域
+	var me = this;
+	points= [[ 31.43458,104.736,3000],[ 31.41,104.83,3000],[ 31.40,104.92,3000],
+	         [ 31.42,104.99,3000],[ 31.25,104.978,3000],[ 31.186,104.85,3000]];
+	
+	// Create the placemark.
+	var polygonPlacemark = me.ge.createPlacemark('');
+
+	// Create the polygon.
+	var polygon = me.ge.createPolygon('');
+	polygon.setExtrude(true);
+	polygon.setAltitudeMode(me.ge.ALTITUDE_RELATIVE_TO_GROUND);
+	polygonPlacemark.setGeometry(polygon);
+
+	// Add points for the outer shape.
+	var outer = me.ge.createLinearRing('');
+	outer.setAltitudeMode(me.ge.ALTITUDE_RELATIVE_TO_GROUND);
+	for(var i = 0;i < points.length; i++){
+		outer.getCoordinates().pushLatLngAlt(points[i][0],points[i][1],points[i][2]);
+	}
+	polygon.setOuterBoundary(outer);
+
+	//Create a style and set width and color of line
+	polygonPlacemark.setStyleSelector(me.ge.createStyle(''));
+	var lineStyle = polygonPlacemark.getStyleSelector().getLineStyle();
+	lineStyle.setWidth(1);
+	lineStyle.getColor().set('99D491DB');
+	var polyStyle = polygonPlacemark.getStyleSelector().getPolyStyle();
+	polyStyle.getColor().set('99D491DB');
+	
+	// Add the placemark to Earth.
+	me.ge.getFeatures().appendChild(polygonPlacemark);
+	
+} ;
 
 Global.prototype.addPanel = function() {
 	var me = this;
@@ -257,6 +330,13 @@ Global.prototype.removePanel = function() {
 		me.panelMask=null;
 	}
 };
+
+
+Global.prototype.showSun = function () {
+	var me=this;
+	me.ge.getSun().setVisibility(true);
+}
+
 
 Global.prototype.rotate = function() {
 	var me = this;
@@ -336,4 +416,235 @@ Global.prototype.cameraRight=function(){
 	me.ge.getView().setAbstractView(la);
 	//camHeadingOffset=-90;
 	cameraMode = "right";
+};
+
+Global.prototype.addRoutePoint=function( pos ){
+	var me =this;
+	me.route.getCoordinates().pushLatLngAlt(pos[0], pos[1], pos[2]);
+	
+};
+
+
+///---------------------------draw with flot 2.8.3-----------
+
+var elevationDataArray =[]; //地面高程数据系
+var flightDataArray =[]; 	//航线数据系
+var pointsDataArray = [] ;	//地面标志点数据系
+var myPlot ;
+function draw(){
+	ptos = [];
+	pointsDataArray = [];
+	getLinePoints();
+	elevation();
+	
+//	$("#elevation").bind( "plothover", function ( evt, position, item ) {
+//		if ( item ) {
+//			// Lock the crosshair to the data point being hovered
+//			myFlot.lockCrosshair({
+//				x: item.datapoint[ 0 ],
+//				y: item.datapoint[ 1 ]
+//			});
+//			
+//			ctx.beginPath();
+//	        ctx.fillStyle = '#222222'
+//	        ctx.arc(item.pageX - $("#elevation").offset().left , item.pageY - $("#elevation").offset().top, 5, 0, Math.PI*2, true); 
+//	        ctx.closePath();
+//	        ctx.fill();
+//	        
+//		} else {
+//			// Return normal crosshair operation
+//			myFlot.unlockCrosshair();
+//		}
+//	});
+	
+	
+}
+
+
+//------------------- Google Maps API------------------
+var SAMPLE_COUNT = 256; 
+function elevation(){
+	var elevator = new google.maps.ElevationService();
+	
+	var gPoint = null; //google.maps.LatLng
+	var path = [];
+	var dist = 0;
+	dojo.forEach(linePoints, function(pt,i){
+	    gPoint = new google.maps.LatLng(pt[0],pt[1]);
+	    path[i]=gPoint ; 
+	  });
+	
+	var pathRequest = {
+			'path': path,
+			'samples': SAMPLE_COUNT
+	};
+	// Initiate the path request.
+	elevator.getElevationAlongPath(pathRequest, elevationPathCallback);
+	
+	var locationsRequest = {
+			'locations': path
+	};
+	// Initiate the locations request.
+	elevator.getElevationForLocations(locationsRequest,elevationLocationsCallback);
+}
+
+function elevationPathCallback (results, status){
+	if (status == google.maps.ElevationStatus.OK) {
+		distance = 0;
+  	    for (var i=0; i<results.length ; i++) {
+  	    	var pto = new Object();
+  	    	//pto.distance =  redondear((distance * i)/(1000 * (SAMPLE_COUNT - 1)));
+  	    	if(i > 0 ){
+  	    		distance+= getDistance(results[i-1].location.d, results[i-1].location.e, 
+  	    				results[i].location.d, results[i].location.e );
+  	    	}
+  	    	pto.distance = distance ;
+  	    	pto.location = results[i].location;
+  	    	pto.elevation = results[i].elevation;
+  	    	ptos[i] = pto;      	    	
+  	    	
+  	    	elevationDataArray[i]=[pto.distance,pto.elevation,results[i].location.d,results[i].location.e];
+  	    	if(i==0){
+  	    		flightDataArray[i]=elevationDataArray[i];
+  	    	}else{
+  	    		flightDataArray[i]=[pto.distance,FLIGHTHEIGHT,results[i].location.d,results[i].location.e];
+  	    	}
+  	    	
+  	    }
+  	 }
+	
+	drawElevation();
+}
+
+function elevationLocationsCallback (results, status){
+	if (status == google.maps.ElevationStatus.OK) {
+		distance = 0;
+  	    for (var i=0; i<results.length ; i++) {
+  	    	var pto = new Object();
+  	    	//pto.distance =  redondear((distance * i)/(1000 * (SAMPLE_COUNT - 1)));
+  	    	if(i > 0 ){
+  	    		distance+= getDistance(results[i-1].location.d, results[i-1].location.e, 
+  	    				results[i].location.d, results[i].location.e );
+  	    	}
+  	    	pto.distance = distance ;
+  	    	pto.location = results[i].location;
+  	    	pto.elevation = results[i].elevation;
+  	    	ptos[i] = pto;      	    	
+  	    	
+  	    	pointsDataArray[i]=[pto.distance,pto.elevation,results[i].location.d,results[i].location.e];
+  	    	
+  	    }
+  	 }
+	drawElevation();
+}
+
+function drawElevation(){
+	myPlot = $.plot($('#elevation'), 
+			[ {label : '高程', data: elevationDataArray, hoverable: true }
+			  ,{label : '航线', data: flightDataArray, hoverable: true ,highlightColor: "rgba(0, 255, 0, 0.8)" }
+			  ,{data:pointsDataArray,points: { show: true }}
+			],
+			{	crosshair: {mode: 'x'}
+				,grid: {hoverable: true,clickable: true }
+				,xaxis :{tickFormatter: function (val, axis) {   
+					return val/1000;}}
+				,yaxis :{max: 3000}
+			});
+	
+	$("#elevation").bind("plotclick", function (event, pos, item) {
+	    // axis coordinates for other axes, if present, are in pos.x2, pos.x3, ...
+	    // if you need global screen coordinates, they are pos.pageX, pos.pageY
+
+	    if (item) {
+	    	myPlot.unhighlight();
+	    	myPlot.highlight(item.series, item.datapoint);
+	    	index_hightlight_point= item.dataIndex;
+	    	var dataArray = item.series.data;
+	        lastPos= [dataArray[item.dataIndex][2], dataArray[item.dataIndex][3],FLIGHTHEIGHT];
+	        global.drawRoute2(lastPos);
+	        cc.jumpTo(dataArray[item.dataIndex][2], dataArray[item.dataIndex][3],dataArray[item.dataIndex][0]);
+	    }
+	});
+	drawRightBottomLabel();
+}
+
+function redraw(){
+	myPlot.draw();
+	drawRightBottomLabel();
+}
+
+function drawRightBottomLabel(){
+	
+	var canvas = myPlot.getCanvas();
+	var ctx = canvas.getContext("2d");
+	ctx.globalAlpha=1;
+	ctx.globalCompositeOperation="source-over";
+	ctx.fillStyle="#ffffff";
+	ctx.fillRect(canvas.width-40, canvas.height-16,40,16);
+	ctx.fillStyle="#000000";
+	//ctx.fillText(Math.round(distance/1000,1)+'km', canvas.width-32, canvas.height-4);
+}
+
+//页面控制调度
+function ControlCenter(){
+	var me = this;
+	
+	
+}
+
+//跳转航线点  俯视图 ，高程图 -> 三维
+ControlCenter.prototype.jumpTo = function (lat ,lon , _distance ){
+	if(_distance){
+		flight_distance=_distance;
+	}
+	
+	if(plane){
+		if(plane.isMove()){
+			stopPlane();
+			plane.teleportToRoutePoint(lat,lon);
+			startPlane();
+		}else{
+			plane.teleportToRoutePoint(lat,lon);
+		}
+	}
+};
+var index_hightlight_point = 0;
+ControlCenter.prototype.planeMove = function(){
+	showCurrent(plane.model.getLocation().getLongitude(), plane.model.getLocation().getLatitude());
+	//global.addRoutePoint([plane.model.getLocation().getLatitude(),plane.model.getLocation().getLongitude(), plane.model.getLocation().getAltitude()]);
+	var i=index_hightlight_point ;
+	for(;i<flightDataArray.length;i++){
+		if(flight_distance < flightDataArray[i][0]){
+			myPlot.unhighlight();
+			//myPlot.highlight(1, i-1);
+			var canvas = myPlot.getCanvas();
+			var ctx = canvas.getContext("2d");
+			
+			var img = new Image();
+			img.src = basePath +'earthview/resource/plane_icon.png';
+			
+			var pos = myPlot.pointOffset({ x: flightDataArray[i][0], y: flightDataArray[i][1] });
+			redraw();
+			ctx.drawImage(img,pos.left-8,pos.top-8);
+			index_hightlight_point=i;
+			break;
+		}
+	}
+	myPlot.unhighlight();
+	myPlot.highlight(2, currentIndex);
+};
+
+ControlCenter.prototype.targetChange = function(_i){
+	global.removeTargets();
+	global.drawTarget();
+	myPlot.unhighlight();
+	myPlot.highlight(2, _i);
+};
+
+ControlCenter.prototype.planeStart = function(){
+	lastPos=null;
+	for (i=0 ;i<linePlacemark.length ;i++){
+		global.ge.getFeatures().removeChild(linePlacemark[i]);
+	}
+	
 };

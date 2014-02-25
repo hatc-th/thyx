@@ -156,7 +156,7 @@ function clamp(val, min, max) {
 
 Plane.prototype.tick = function() {
   var me = this;
- 
+  
   var now = (new Date()).getTime();
   // dt is the delta-time since last tick, in seconds
   var dt = (now - me.lastMillis) / 1000.0;
@@ -330,6 +330,7 @@ Plane.prototype.tick = function() {
 
   // Move.
   var deltaPos = V3.scale(me.vel, dt);
+  var old_lla= lla;
   me.pos = V3.add(me.pos, deltaPos);
   
   el('vel').value=Math.round(forwardSpeed * 3.6);
@@ -340,6 +341,8 @@ Plane.prototype.tick = function() {
                 M33.transform(me.localFrame, me.pos));
   lla = V3.cartesianToLatLonAlt(gpos);
   
+  flight_distance += getDistance(old_lla[0], old_lla[1], lla[0], lla[1]);
+  el('distance').value= Math.round(flight_distance);
   // Don't go underground.
   
   if (me.pos[2] < groundAlt) {
@@ -397,7 +400,8 @@ Plane.prototype.tick = function() {
   }
   
   global.rotate(imgR);
-  
+  //添加轨迹
+  global.addRoutePoint([plane.model.getLocation().getLatitude(),plane.model.getLocation().getLongitude(), plane.model.getLocation().getAltitude()]);
   //me.tickPopups(dt);
   if(cameraMode == "left"){
 	  global.cameraLeft();
@@ -542,6 +546,7 @@ Plane.prototype.teleportTo = function(lat, lon, heading , absALT) {
 
 Plane.prototype.teleportToRoutePoint =  function(lat, lon){
 	var me = this;
+	if(!me) return;
 	
 	var targetIndex = -1;
 	//判断输入的点距航线上各点的距离，找出下一个目标点，作为飞行的方向
@@ -570,10 +575,14 @@ Plane.prototype.teleportToRoutePoint =  function(lat, lon){
 	currentIndex = targetIndex;
 	currentTarget = linePoints[targetIndex];
 	currentHeading = getAngle( [lat,lon,0], currentTarget);
+	if(!currentHeading){
+		currentIndex = targetIndex+1;
+		currentTarget = linePoints[targetIndex+1];
+		currentHeading = getAngle( [lat,lon,0], currentTarget);
+	}
 	me.model.getOrientation().setHeading(currentHeading) ;
 	
 	me.teleportTo(lat, lon, currentHeading /180 * Math.PI,FLIGHTHEIGHT);
-	
 	
 }
 // Move our anchor closer to our current position.  Retain our global
@@ -687,8 +696,7 @@ Plane.prototype.checkPoints = function (){
 		currentIndex=1;
 		lastTarget = chkPoints[0];
 		currentTarget = chkPoints[1] ;
-		global.removeTargets();
-		global.drawTarget();
+		cc.targetChange(1);
 	}
 	var dist= getDistance(curPos[0],curPos[1],currentTarget[0],currentTarget[1]);
 	if( dist < 1000   ){	
@@ -703,8 +711,7 @@ Plane.prototype.checkPoints = function (){
 		}
 		lastTarget=currentTarget;
 		currentTarget = chkPoints[currentIndex] ;
-		global.removeTargets();
-		global.drawTarget();
+		cc.targetChange(currentIndex);
 	}
 	
 	el('target').value=currentIndex;
@@ -730,6 +737,7 @@ var currentHeading=0;
 
 var FLIGHTHEIGHT=2000;
 var HEIGHT=0;
+var flight_distance=0; //航程；
 // 等分航线点
 function getLinePoints( a ,b, n ){
 	linePoints = coordinateLine;
@@ -779,11 +787,18 @@ function prepareRoute(){
  
 function go(){
 	currentTarget=null;
+	flight_distance=0;
+	index_hightlight_point=0;
+	cc.planeStart();
 	prepareRoute();
 	moveToStart();
 	startPlane();
 }
 
+Plane.prototype.isMove = function (){
+	var me = this;
+	return me.doTick;
+}
 Plane.prototype.adjustPosition = function (){
 	var me = this; 
 	
@@ -802,7 +817,7 @@ Plane.prototype.adjustPosition = function (){
 	
 };
 
-function afterFrameEnd(event){
+function afterFrameEnd(event){message("ticking..."+plane.lastMillis);
 	if(plane.doTick){
 		plane.tick();
 	}
@@ -840,14 +855,12 @@ function moveToStart(){
 	moveTo(startPos);
 }
 function moveToNext(){
-	stopPlane();
 	if(currentIndex<chkPoints.length-1){
 		plane.teleportToRoutePoint(chkPoints[currentIndex][0],chkPoints[currentIndex][1]);
 	}else{
 		plane.teleportToRoutePoint(endPos[0],endPos[1]);
 	}
 	//( 31.368632578694864,104.99279158947874 );
-	startPlane();
 }
 function moveToEnd(){
 	moveTo(endPos);
@@ -863,10 +876,14 @@ function message(val,index){
 	
 	el('inforBox'+index).value=val;
 }
-
+var index_hightlight_point = 0;
 function reportPos(){
-	message("当前位置："+plane.model.getLocation().getLatitude()+","+plane.model.getLocation().getLongitude(),1);
-	showCurrent(plane.model.getLocation().getLongitude(), plane.model.getLocation().getLatitude());
+	if(plane){
+		message("当前位置："+plane.model.getLocation().getLatitude()+","+plane.model.getLocation().getLongitude(),1);
+	}else{
+		clearInterval(reportObj);
+	}
+	cc.planeMove();
 }
 
 function changeSpeed(v){
