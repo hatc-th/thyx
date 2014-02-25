@@ -34,13 +34,18 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
 <!-- 地图操作需要引入的文件 -->
 <%@include file = "/gis/gis.inc"%>
 <!-- 三维模拟需要引入的文件 -->
+<script src="http://maps.google.com/maps/api/js?sensor=true&libraries=geometry"></script>
 <script type="text/javascript" src="http://www.google.com/jsapi" charset="utf-8"></script>
 <script type="text/javascript" src="./earthview/js/math3d.js" charset="utf-8"></script>
 <script type="text/javascript" src="./earthview/js/plane.js" charset="utf-8"></script>
 <script type="text/javascript" src="./earthview/js/global.js" charset="utf-8"></script>
+<script type="text/javascript" src="./earthview/js/jquery.flot.min.js" charset="utf-8"></script>
+<script type="text/javascript" src="./earthview/js/jquery.flot.crosshair.min.js" charset="utf-8"></script>
 <script type="text/javascript">
 
+
 var basePath ="<%=basePath %>";
+var cc = new ControlCenter();
 
 $(document).ready(function() {
 
@@ -908,6 +913,7 @@ function clearGraphicInfoByCode() {
 						<div id="map" style="width:100%;height:100%;background:#dff8c3;"></div>
 						<!--==========剖面图div==========-->
 						<div id="contentPane" style="cursor:pointer;text-align:left;position:absolute;left:1512px;top:72px;border:1px solid green;width:120px;height:200px;overflow-y:auto;overflow-x:hidden;background:grey;display:none;">
+					    	
 					    </div>
 					</div>
 					<div class="showAirdromeImgDiv" id="showAirdromeImgDiv">
@@ -950,6 +956,7 @@ function clearGraphicInfoByCode() {
 				<!--==========设置上面圆角end===========-->
 				
 				<div id="fPlanRightBottomContext" class="fPlanRightBottomContext">
+					<div id ="elevation" style="width:99%;height:100%;margin-left:5px;background-color: #ffffff;"> </div>
 					<div id="chartNode" data-dojo-type="dojox.charting.widget.Chart2D"  style="width:840px;height:150px;margin-left:5px;"></div>
 				</div>	
 				
@@ -1005,6 +1012,7 @@ function clearGraphicInfoByCode() {
 			<input class="buttonArea2" id="commitBut"  type="button" value="  提 交" onClick="ajaxSaveFlyPlan('12');" />&nbsp;&nbsp;
 			<input class="buttonArea3" type="button" value="  返 回" onClick="goBack();"/>
 			<input class="buttonArea3" type="button" value="  仿真" onClick="runGlobal();"/>
+			<input class="buttonArea3" type="button" value="高程" onclick="draw();" />
 		</div>
 	</div>
 	</form>
@@ -1023,6 +1031,7 @@ function clearGraphicInfoByCode() {
 		<input type="button" value="左侧视角" onclick="global.removePanel();global.cameraLeft();" />
 		<br/>
 		
+		<span style="color: #FFFFFF" >航程</span><input type="input" style="width:60px;" value="0" id="distance"  readonly />
 		<span style="color: #FFFFFF" >高度</span><input type="input" style="width:60px;" value="0" id="height"  readonly />
 		
 		<span style="color: #FFFFFF" >目标点：</span><input type="input" style="width:50px;" value="0" id="target"  readonly />
@@ -1032,13 +1041,16 @@ function clearGraphicInfoByCode() {
 		<span style="color: #FFFFFF" >距离</span><input type="input" style="width:60px;" value="0" id="dis"  readonly />
 		<span style="color: #FFFFFF" >目标朝向</span><input type="input" style="width:60px;" value="0" id="targetR"  readonly />
 		<span style="color: #FFFFFF" >当前朝向</span><input type="input" style="width:60px;" value="0" id="heading"  readonly /><br/>
-		<input type="button" value="go" onclick="go()" /> 
+		<input type="button" value="开始" onclick="go()" /> 
 		<input type="button" value="计算航线" onclick="prepareRoute();" />
 		<input type="button" value="转到起点" onclick="moveToStart();" />
 		<input type="button" value="转到下一点" onclick="moveToNext();" />
 		<input type="button" value="转到终点" onclick="moveToEnd();" />
-		<input type="button" value="Start" onclick="startPlane()" /> 
-		<input type="button" value="Stop" onclick="stopPlane()" /> <br/>
+		<input type="button" value="启动" onclick="startPlane()" /> 
+		<input type="button" value="停止" onclick="stopPlane()" />
+		<input type="button" value="空域" onclick="global.drawZone();" />
+		<input type="button" value="日照" onclick="global.showSun();" />
+		<br/>
 		<textarea type="input" rows="3" style="width: 45%;" id="inforBox0" ></textarea>
 		<textarea type="input" rows="3" style="width: 45%;" id="inforBox1" ></textarea>
 	</div>

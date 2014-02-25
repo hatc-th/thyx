@@ -103,9 +103,7 @@ function createMapMenu() {
     ctxMenuForMap.addChild(new dijit.MenuItem({ 
         label: "在三维仿真中移动到此",
         onClick: function(evt) {
-        	if(plane) {
-        		plane.teleportToRoutePoint(currentLocation.y, currentLocation.x);
-        	}
+        	cc.jumpTo(currentLocation.y, currentLocation.x);
         }
       }));
     

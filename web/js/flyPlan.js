@@ -1635,7 +1635,7 @@ var graphic2='';	// 备航线地图显示对应的全局变量
  * param rsPPos 传递的坐标
  * param formatType 返回的坐标格式， 1 表示返回坐标值中经度在前，2 表示返回的坐标值中纬度在前。 为空时默认为 1 经度在前
  */
-function getPointNumInfo(rsPPos,formatType){
+function getPointNumInfo(rsPPos,formatType,rsPName){
 	pPos=rsPPos.split('E');
 	temp1=parseFloat(pPos[0].substr(1,2));
 	temp2=parseFloat(pPos[0].substr(3,2))/60;
@@ -1650,7 +1650,7 @@ function getPointNumInfo(rsPPos,formatType){
 	wd=temp1+temp2+temp3+temp4;
 	jd=temp5+temp6+temp7+temp8;
 	if(formatType !=null && formatType == '2'){  // 三维使用格式，纬度在前
-		return [wd,jd];
+		return [wd,jd,rsPName];
 	}
 	return '['+jd+','+wd+']'; // 二维使用格式，经度在前
 } 
@@ -1781,11 +1781,11 @@ function reDrawLineSection(wayType){
 	    if (document.form1.elements[i].name=="rs_PPosBak"){ 
 	    		skWay1=skWay1+getPointNumInfo(document.form1.elements[i].value,'1')+",";   
 	    		
-	    		coordinateLine1[coordinateLine1.length] = getPointNumInfo(document.form1.elements[i].value,'2');  
+	    		coordinateLine1[coordinateLine1.length] = getPointNumInfo(document.form1.elements[i].value,'2',document.form1.elements[i-1].value);  
 	    }
 	    if (document.form1.elements[i].name=="rs_PPosMain"){
 	    		skWay2=skWay2+getPointNumInfo(document.form1.elements[i].value,'1')+",";	
-	    		coordinateLine2[coordinateLine2.length] = getPointNumInfo(document.form1.elements[i].value,'2'); 
+	    		coordinateLine2[coordinateLine2.length] = getPointNumInfo(document.form1.elements[i].value,'2',document.form1.elements[i-1].value); 
 	    }
 	}
  	if( (wayType =='1' && document.getElementById('lineFlag').value == '0')  // 显示主航线刨面图，当前 lineTableDiv2 层表示的主航线
