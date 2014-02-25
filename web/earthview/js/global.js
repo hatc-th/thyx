@@ -557,9 +557,10 @@ function drawElevation(){
 	    	myPlot.unhighlight();
 	    	myPlot.highlight(item.series, item.datapoint);
 	    	index_hightlight_point= item.dataIndex;
-	        lastPos= [elevationDataArray[item.dataIndex][2], elevationDataArray[item.dataIndex][3],FLIGHTHEIGHT];
+	    	var dataArray = item.series.data;
+	        lastPos= [dataArray[item.dataIndex][2], dataArray[item.dataIndex][3],FLIGHTHEIGHT];
 	        global.drawRoute2(lastPos);
-	        cc.jumpTo(elevationDataArray[item.dataIndex][2], elevationDataArray[item.dataIndex][3],elevationDataArray[item.dataIndex][0]);
+	        cc.jumpTo(dataArray[item.dataIndex][2], dataArray[item.dataIndex][3],dataArray[item.dataIndex][0]);
 	    }
 	});
 	drawRightBottomLabel();

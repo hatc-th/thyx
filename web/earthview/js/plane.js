@@ -872,9 +872,12 @@ function message(val,index){
 }
 var index_hightlight_point = 0;
 function reportPos(){
-	message("当前位置："+plane.model.getLocation().getLatitude()+","+plane.model.getLocation().getLongitude(),1);
+	if(plane){
+		message("当前位置："+plane.model.getLocation().getLatitude()+","+plane.model.getLocation().getLongitude(),1);
+	}else{
+		clearInterval(reportObj);
+	}
 	cc.planeMove();
-	
 }
 
 function changeSpeed(v){
