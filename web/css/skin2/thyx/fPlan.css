@@ -143,7 +143,7 @@ margin-left: 855px;
 }
 /*******************************页面布局*********************************************/
 .globalDiv{
-text-align:center;
+/*text-align:center;*/
 margin-left:48px;
 }
 .navText{
@@ -272,6 +272,7 @@ border-right:5px #E8E8E8 solid;
 }
 /*******************************页面布局*********************************************/
 .bottomButtonArea{
+text-align:center;
 padding-top:5px;
 width:1585px;
 height:30px;

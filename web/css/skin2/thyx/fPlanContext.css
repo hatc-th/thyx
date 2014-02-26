@@ -105,6 +105,7 @@ height:20px;
 border:1px #ccc solid;
 }
 .lineTableTitle{
+text-align:center;
 background:#212A31;
 color:#fff !important;
 }
