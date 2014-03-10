@@ -5,7 +5,6 @@
 google.load("earth", "1", {'other_params' : 'sensor=false'});
 google.load('maps', '2.x', {'other_params' : 'sensor=false'});
 
-window.ge =null;
 window.global = null;
 
 function runGlobal(){
@@ -20,7 +19,7 @@ function runGlobal(){
 		window.global= new Global();
 		window.global.show();
 		window.global.init();
-		draw();
+		cc.globalInit();
 	}
 	
 }
@@ -37,47 +36,66 @@ function Global() {
 	me.targetPlacemarks = [];
 	me.panelMask = null;
 	
+	me.cameraMode="back" ; //left right back;
 	cc.global = me; 
 }
 
 Global.prototype.show = function() {
 	//创建包含地球的div
-	if (!dojo.byId('map3d_container')) {
-		dojo.create("div", {
-			id : "map3d_container",
-			style : {
-				position : "absolute",
-				width : dojo.byId('fPlanContextText').style.width,
-				height : dojo.byId('fPlanContext').style.height,
-				margin : "0 auto"
-
-			}
-		}, dojo.byId('fPlanContext'));
+//	if (!dojo.byId('map3d_container')) {
+//		dojo.create("div", {
+//			id : "map3d_container",
+//			style : {
+//				position : "absolute",
+//				width : dojo.byId('fPlanContextText').style.width,
+//				height : dojo.byId('fPlanContext').style.height,
+//				margin : "0 auto"
+//
+//			}
+//		}, dojo.byId('fPlanContext'));
+//	}
+//	if (!dojo.byId('map3d')) {
+//		dojo.create("div", {
+//			id : "map3d",
+//			style : {
+//				height : "80%",
+//				width : "100%"
+//			}
+//		}, dojo.byId('map3d_container'));
+//
+//		//显示控制板
+//		dojo.place(dojo.byId('map3dControl'), dojo.byId('map3d'), 'after');
+//		dojo.setStyle(dojo.byId("map3dControl"), "display", "block");
+//		dojo.setStyle(dojo.byId("map3dControl"), "z-index", "999");
+//		dojo.setStyle(dojo.byId("map3dControl"), "background-color", "#374068");
+//	}
+	if (!$('#map3d_container').length>0) {
+		$("<div id='map3d_container'></div>").css({
+			position : "absolute",
+			width : dojo.byId('fPlanContextText').style.width,
+			height : dojo.byId('fPlanContext').style.height,
+			margin : "0 auto"
+		}).appendTo("#fPlanContext");
 	}
-	if (!dojo.byId('map3d')) {
-		dojo.create("div", {
-			id : "map3d",
-			style : {
+	if (!$('#map3d').length>0) {
+		$("<div id='map3d' ></div>").css({
 				height : "80%",
 				width : "100%"
-			}
-		}, dojo.byId('map3d_container'));
+			}).appendTo('#map3d_container');
 
 		//显示控制板
-		dojo.place(dojo.byId('map3dControl'), dojo.byId('map3d'), 'after');
-		dojo.setStyle(dojo.byId("map3dControl"), "display", "block");
-		dojo.setStyle(dojo.byId("map3dControl"), "z-index", "999");
-		dojo.setStyle(dojo.byId("map3dControl"), "background-color", "#374068");
+		$('#map3d_container').append($('#map3dControl'));
+		$('#map3dControl').css({display: "block","z-index": "999","background-color":"#374068" });
 	}
-
 };
 
 Global.prototype.hide = function() {
-	if (ge != null) {
-		dojo.place(dojo.byId('map3dControl'), dojo.byId('globalDiv'), 'after');
-		dojo.setStyle(dojo.byId("map3dControl"), "display", "none");
-		dojo.destroy("map3d_container");
-		ge = null;
+	var me =this;
+	if (me.ge != null) {
+		$("#globalDiv").append($('#map3dControl'));
+		$('#map3dControl').css({display: "none"});
+		$("#map3d_container").remove();
+		me.ge = null;
 		plane = null;
 		return;
 	}
@@ -90,22 +108,23 @@ Global.prototype.init = function() {
 	// initCallback
 	function(object) {
 		me.ge = object;
-		window.ge = object;
 		me.ge.getWindow().setVisibility(true);
 		// ge.getOptions().setMouseNavigationEnabled(false);
-		me.ge.getLayerRoot().enableLayerById(ge.LAYER_BUILDINGS, true); // /建筑
-		me.ge.getLayerRoot().enableLayerById(ge.LAYER_BORDERS, true); // 边界
+		me.ge.getLayerRoot().enableLayerById(me.ge.LAYER_BUILDINGS, true); // /建筑
+		me.ge.getLayerRoot().enableLayerById(me.ge.LAYER_BORDERS, true); // 边界
 
-		me.ge.getNavigationControl().setVisibility(ge.VISIBILITY_AUTO);//显示罗盘
+		me.ge.getNavigationControl().setVisibility(me.ge.VISIBILITY_AUTO);//显示罗盘
 		
 		//地形精度
-		ge.getLayerRoot().enableLayerById(ge.LAYER_TERRAIN, true);
-		ge.getOptions().setTerrainExaggeration(1.0);//2.0
+		me.ge.getLayerRoot().enableLayerById(me.ge.LAYER_TERRAIN, true);
+		me.ge.getOptions().setTerrainExaggeration(1.0);//2.0
 		
 		me.ge.getOptions().setStatusBarVisibility(true); //显示状态栏 
-		me.ge.getOptions().setFlyToSpeed(ge.SPEED_TELEPORT);
+		me.ge.getOptions().setFlyToSpeed(me.ge.SPEED_TELEPORT);
+		me.ge.getOptions().setFlyToSpeed(100);  // don't filter camera motion
 		me.plane = new Plane();
 		plane= me.plane;
+		plane.ge=me.ge;
 		// addPanel();
 	},
 	// failureCallback
@@ -114,40 +133,10 @@ Global.prototype.init = function() {
 	});
 };
 
-function el(e) {
-	return document.getElementById(e);
-}
 
-function submitLocation() {
-	doGeocode(el('address').value);
-}
-
-function doGeocode(address) {
-	geocoder.getLatLng(address, function(point) {
-		if (point) {
-			if (ge != null && plane != null) {
-				plane.teleportTo(point.y, point.x);
-			}
-		}
-	});
-}
-
-function updateOptions() {
-	var options = ge.getOptions();
-	var form = el('options');
-
-	options.setStatusBarVisibility(form.statusbar.checked);
-	if (form.nav.checked) {
-		ge.getNavigationControl().setVisibility(ge.VISIBILITY_SHOW);
-	} else {
-		ge.getNavigationControl().setVisibility(ge.VISIBILITY_HIDE);
-	}
-}
-
+//绘制预计航线
 Global.prototype.drawRoute = function() {
 	var me = this;
-	me.drawRoute2();
-	return;
 	if (me.routePlacemark) {
 		me.ge.getFeatures().removeChild(me.routePlacemark);
 	}
@@ -173,8 +162,8 @@ Global.prototype.drawRoute = function() {
 
 	me.routePlacemark.setStyleSelector(me.ge.createStyle(''));
 	var lineStyle = me.routePlacemark.getStyleSelector().getLineStyle();
-	lineStyle.setWidth(2);
-	lineStyle.getColor().set('ffff0000');
+	lineStyle.setWidth(5);
+	lineStyle.getColor().set('99f88fd4');
 
 	me.ge.getFeatures().appendChild(me.routePlacemark);
 
@@ -183,14 +172,14 @@ Global.prototype.drawRoute = function() {
 
 
 var lastPos =null;
-var linePlacemark = [];
+var linePlacemarks = new Array(0);
 //@param : [lat,lon,alt]
-Global.prototype.drawRoute2=function( pos ){
+Global.prototype.drawFlyRoute=function( pos ){
 	var me =this;
 	// Create the LineString
 	var lineString = me.ge.createLineString('');
 	var lineStringPlacemark = me.ge.createPlacemark('');
-	linePlacemark[linePlacemark.length] = lineStringPlacemark;
+	linePlacemarks[linePlacemarks.length] = lineStringPlacemark;
 	lineStringPlacemark.setGeometry(lineString);
 	me.route = lineString;
 	
@@ -210,6 +199,36 @@ Global.prototype.drawRoute2=function( pos ){
 	lastPos  = pos;
 }
 
+Global.prototype.drawLine=function( lat1,lon1,lat2,lon2){
+	var me =this;
+	// Create the LineString
+	var lineString = me.ge.createLineString('');
+	var lineStringPlacemark = me.ge.createPlacemark('');
+	lineStringPlacemark.setGeometry(lineString);
+	
+	lineString.getCoordinates().pushLatLngAlt(lat1, lon1, 1000);
+	lineString.getCoordinates().pushLatLngAlt(lat2, lon2, 1000);
+	
+	lineString.setTessellate(true);
+	lineString.setAltitudeMode(me.ge.ALTITUDE_ABSOLUTE);
+
+	lineStringPlacemark.setStyleSelector(me.ge.createStyle(''));
+	var lineStyle = lineStringPlacemark.getStyleSelector().getLineStyle();
+	lineStyle.setWidth(2);
+	lineStyle.getColor().set('ffffff00');
+
+	me.ge.getFeatures().appendChild(lineStringPlacemark);
+}
+
+Global.prototype.cleanLines=function( ){
+	var me = this;
+	for (var i=0 ;i<linePlacemarks.length ;i++){
+		if(linePlacemarks[i]){
+			me.ge.getFeatures().removeChild(linePlacemarks[i]);
+		}
+		
+	}
+}
 Global.prototype.drawTarget = function() {
 	var me = this;
 	// Create the placemark.
@@ -350,15 +369,15 @@ Global.prototype.simulate = function (routePoints,height){
 	
 };
 
-Global.prototype.cameraMove=function(lat,lon){
+Global.prototype.cameraMove=function(lat,lon,tilt, range ){
 	var me = this;
 	var la = me.ge.createLookAt('');
 	la.set(lat, lon,
 		  HEIGHT /* altitude */,
-		 me.ALTITUDE_RELATIVE_TO_GROUND,
+		 me.ge.ALTITUDE_RELATIVE_TO_GROUND,
          0 ,
-         80, /* tilt */
-         50 /* range */
+         tilt?tilt:80, /* tilt */
+         range?range:50 /* range */
          );
 	me.ge.getView().setAbstractView(la);
 };
@@ -369,21 +388,20 @@ Global.prototype.cameraOnboard=function(){
 	var la = me.ge.createLookAt('');
 	la.set(lo.getLatitude(), lo.getLongitude(),
 		 lo.getAltitude()+10 /* altitude */,
-		 ge.ALTITUDE_ABSOLUTE,
+		 me.ge.ALTITUDE_ABSOLUTE,
 		 plane.model.getOrientation().getHeading() ,
          80, /* tilt */
          0 /* range */
          );
 	me.ge.getView().setAbstractView(la);
-	cameraMode = "board";
+	me.cameraMode = "board";
 };
-var cameraMode ; //left right back;
 //机尾视角
 Global.prototype.cameraBack=function(){
 	var me = this;
 	plane.cameraCut();
 	camHeadingOffset=0;
-	cameraMode = "back";
+	me.cameraMode = "back";
 };
 //左侧视角
 Global.prototype.cameraLeft=function(){
@@ -392,14 +410,14 @@ Global.prototype.cameraLeft=function(){
 	var la = me.ge.createLookAt('');
 	la.set(lo.getLatitude(), lo.getLongitude(),
 		 lo.getAltitude() /* altitude */,
-		 ge.ALTITUDE_ABSOLUTE,
+		 me.ge.ALTITUDE_ABSOLUTE,
 		 fixAngle( plane.model.getOrientation().getHeading() + 90 ),
          60, /* tilt */
          100 /* range */
          );
 	me.ge.getView().setAbstractView(la);
 	//camHeadingOffset=90;
-	cameraMode = "left";
+	me.cameraMode = "left";
 };
 //右侧视角
 Global.prototype.cameraRight=function(){
@@ -408,14 +426,14 @@ Global.prototype.cameraRight=function(){
 	var la = me.ge.createLookAt('');
 	la.set(lo.getLatitude(), lo.getLongitude(),
 		 lo.getAltitude() /* altitude */,
-		 ge.ALTITUDE_ABSOLUTE,
+		 me.ge.ALTITUDE_ABSOLUTE,
 		 fixAngle(plane.model.getOrientation().getHeading() - 90),
          60, /* tilt */
          100 /* range */
          );
 	me.ge.getView().setAbstractView(la);
 	//camHeadingOffset=-90;
-	cameraMode = "right";
+	me.cameraMode = "right";
 };
 
 Global.prototype.addRoutePoint=function( pos ){
@@ -426,44 +444,50 @@ Global.prototype.addRoutePoint=function( pos ){
 
 
 ///---------------------------draw with flot 2.8.3-----------
+var ec=null;
+function drawElevation(){
+	if(!ec)ec= new ElevationChart;
+	ec.draw();
+}
 
-var elevationDataArray =[]; //地面高程数据系
-var flightDataArray =[]; 	//航线数据系
-var pointsDataArray = [] ;	//地面标志点数据系
-var myPlot ;
-function draw(){
-	ptos = [];
-	pointsDataArray = [];
-	getLinePoints();
-	elevation();
+function ElevationChart (){
+	var me= this;
 	
-//	$("#elevation").bind( "plothover", function ( evt, position, item ) {
-//		if ( item ) {
-//			// Lock the crosshair to the data point being hovered
-//			myFlot.lockCrosshair({
-//				x: item.datapoint[ 0 ],
-//				y: item.datapoint[ 1 ]
-//			});
-//			
-//			ctx.beginPath();
-//	        ctx.fillStyle = '#222222'
-//	        ctx.arc(item.pageX - $("#elevation").offset().left , item.pageY - $("#elevation").offset().top, 5, 0, Math.PI*2, true); 
-//	        ctx.closePath();
-//	        ctx.fill();
-//	        
-//		} else {
-//			// Return normal crosshair operation
-//			myFlot.unlockCrosshair();
-//		}
-//	});
+	me.elevationDataArray =[]; //地面高程数据系
+	me.flightDataArray =[]; 	//航线数据系
+	me.pointsDataArray = [] ;	//地面标志点数据系
+	me.myPlot=null;
 	
-	
+	me.img = new Image();
+	me.img.src = basePath +'earthview/resource/plane_icon.png';
 }
 
 
+ElevationChart.prototype.draw = function(){
+	var me = this;
+	me.ptos = [];
+	me.elevationDataArray =[]; 
+	me.flightDataArray =[]; 	
+	me.pointsDataArray = [];
+	me.pointsTicks = [];
+	current_sample_index=0;
+	getLinePoints();
+	if(linePoints.length>1){
+		me.elevation();
+	}
+	
+	me.virtual_point_distance = -1;
+	me.virtual_point_num = -1;
+	
+};
+
+
 //------------------- Google Maps API------------------
-var SAMPLE_COUNT = 256; 
-function elevation(){
+var SAMPLE_COUNT = 256; //路径采样密度
+//var mLength = 10 ; // 路径宽度采样点密度
+//var mPoints = new Array()[mLength+1][SAMPLE_COUNT]; //采样点矩阵
+ElevationChart.prototype.elevation=function (){
+	var me = this;
 	var elevator = new google.maps.ElevationService();
 	
 	var gPoint = null; //google.maps.LatLng
@@ -490,35 +514,116 @@ function elevation(){
 
 function elevationPathCallback (results, status){
 	if (status == google.maps.ElevationStatus.OK) {
-		distance = 0;
+		var distance = 0;
+		var distance_unit = -1;
+		ec.virtual_point_distance = -1;
+		ec.virtual_point_num = -1;
+		var start_ap_ev=results[0].elevation;
+		var end_ap_ev=results[results.length-1].elevation;
   	    for (var i=0; i<results.length ; i++) {
   	    	var pto = new Object();
   	    	//pto.distance =  redondear((distance * i)/(1000 * (SAMPLE_COUNT - 1)));
   	    	if(i > 0 ){
   	    		distance+= getDistance(results[i-1].location.d, results[i-1].location.e, 
   	    				results[i].location.d, results[i].location.e );
+  	    		if(distance_unit < 0){
+  	    			distance_unit=distance;
+  	    		}
   	    	}
   	    	pto.distance = distance ;
   	    	pto.location = results[i].location;
   	    	pto.elevation = results[i].elevation;
-  	    	ptos[i] = pto;      	    	
+  	    	ec.ptos[i] = pto;      	    	
   	    	
-  	    	elevationDataArray[i]=[pto.distance,pto.elevation,results[i].location.d,results[i].location.e];
-  	    	if(i==0){
-  	    		flightDataArray[i]=elevationDataArray[i];
-  	    	}else{
-  	    		flightDataArray[i]=[pto.distance,FLIGHTHEIGHT,results[i].location.d,results[i].location.e];
+  	    	ec.elevationDataArray[i]=[pto.distance,pto.elevation,results[i].location.d,results[i].location.e];
+  	    	if(i==0 || i==results.length-1){
+  	    		ec.flightDataArray[i]=ec.elevationDataArray[i];
+  	    	}else if(i + ec.virtual_point_num >= results.length){ //模拟降落 
+  	    		ec.flightDataArray[i]=[pto.distance, FLIGHTHEIGHT - (i + ec.virtual_point_num -results.length +1) * ((FLIGHTHEIGHT- end_ap_ev) / (ec.virtual_point_num - 1)), 
+  	    		                       results[i].location.d,results[i].location.e];
+  	    	}else if(distance >2000){
+  	    		if(ec.virtual_point_num<0){
+  	    			ec.virtual_point_num = i;
+  	    			ec.virtual_point_distance=distance;
+  	    			for(var n =1; n< ec.virtual_point_num;n++){//从起飞到爬升到航线高度，在机场2000米范围内虚拟 virtual_point_num 个点 ， 模拟起飞
+  	    				ec.flightDataArray[n]=[n * distance_unit, n * ((FLIGHTHEIGHT- start_ap_ev)  / (ec.virtual_point_num - 1)) + start_ap_ev, 
+  	    				                       results[n].location.d,results[n].location.e];
+  	    			}
+  	    			
+  	    		}
+  	    		ec.flightDataArray[i]=[pto.distance,FLIGHTHEIGHT,results[i].location.d,results[i].location.e];
   	    	}
   	    	
+  	    	if(FLIGHTHEIGHT > 0 && FLIGHTHEIGHT - pto.elevation <= 600) { // 当飞行高度低于最高障碍600米时，报警
+				addAreaSpaceConflictData("rs_ob",FLIGHTHEIGHT - pto.elevation ,{x:results[i].location.e ,y:results[i].location.d } );
+			}
+  	    	
   	    }
+  	    
+  	    //mPoints [ 0 ] = elevationDataArray;
+  	    
+  	  //extendPath( ec.elevationDataArray);
+  	    
   	 }
 	
-	drawElevation();
+	ec.doDraw();
+}
+
+function extendPath(samples){
+	if(global)global.drawRoute();
+	var d1,tempdis1,tempdis2,hdvar,sinvar,cosvar,dx,dy;
+	for (var k = 0; k < samples.length; k++) {
+            
+            if(k ==0){
+            	d1 = (new Date().getTime());
+            	tempdis1 = getDistance(samples[0][2],samples[0][3], samples[0][2],samples[1][3])/1000;//x
+			    tempdis2 = getDistance(samples[1][2],samples[1][3], samples[0][2],samples[1][3])/1000;//y
+			   
+				hdvar = Math.atan2(tempdis2,tempdis1);//获取弧度point(x,y) atan2(y,x)
+				if((samples[1][2] > samples[0][2]) && (samples[1][3] < samples[0][3])){
+			    	hdvar = Math.PI - hdvar
+			    }
+			    if((samples[1][2] < samples[0][2]) && (samples[1][3] > samples[0][3])){
+			    	hdvar = Math.PI - hdvar
+			    }
+				sinvar = Math.sin(hdvar);//
+				cosvar = Math.cos(hdvar);//
+            }else{
+			    tempdis1 = getDistance(samples[k-1][2], samples[k-1][3], samples[k-1][2], samples[k][3])/1000;//x
+			    tempdis2 = getDistance(samples[k][2], samples[k][3], samples[k-1][2], samples[k][3])/1000;//y
+
+				hdvar = Math.atan2(tempdis2,tempdis1);//获取弧度point(x,y) atan2(y,x)
+				if((samples[k][2] > samples[k-1][2]) && (samples[k][3] < samples[k-1][3])){
+			    	hdvar = Math.PI - hdvar
+			    }
+			    if((samples[k][2] < samples[k-1][2]) && (samples[k][3] > samples[k-1][3])){
+			    	hdvar = Math.PI - hdvar
+			    }
+				sinvar = Math.sin(hdvar);//
+				cosvar = Math.cos(hdvar);//
+            }
+			
+			//samples[k]
+			var pt = new esri.geometry.Point(samples[k][3], samples[k][2], map.spatialReference);
+			
+			dx = sinvar*10;//经度方向偏移量（单位千米＄1�7
+			dy = cosvar*10;//纬度方向偏移量（单位千米＄1�7
+			var hd = samples[k][2]*Math.PI/180.0;//角度转换为弧庄1�7
+			dx = dx/111.31955*(Math.cos(hd));//经度偏移倄1�7
+			dy = dy/111.31955;//纬度偏移倄1�7
+			var pt1 = pt.offset(-dx,dy);
+			var pt2 = pt.offset(dx,-dy);
+			if(global)global.drawLine(pt1.y,pt1.x,pt2.y,pt2.x);
+			//var myJsonStr = '{"points":' + points + '}';
+			//temppoints = '[['+pt1.x+','+pt1.y+'],['+pt2.x+','+pt2.y+']]';
+			//gis_drawSection2(temppoints,planHeight,samples,k,drawChart);
+		
+	}
 }
 
 function elevationLocationsCallback (results, status){
 	if (status == google.maps.ElevationStatus.OK) {
-		distance = 0;
+		var distance = 0;
   	    for (var i=0; i<results.length ; i++) {
   	    	var pto = new Object();
   	    	//pto.distance =  redondear((distance * i)/(1000 * (SAMPLE_COUNT - 1)));
@@ -529,122 +634,249 @@ function elevationLocationsCallback (results, status){
   	    	pto.distance = distance ;
   	    	pto.location = results[i].location;
   	    	pto.elevation = results[i].elevation;
-  	    	ptos[i] = pto;      	    	
   	    	
-  	    	pointsDataArray[i]=[pto.distance,pto.elevation,results[i].location.d,results[i].location.e];
+  	    	ec.pointsDataArray[i]=[pto.distance,pto.elevation,results[i].location.d,results[i].location.e];
+  	    	ec.pointsTicks[i]= [pto.distance, linePoints[i][2]];
   	    	
   	    }
   	 }
-	drawElevation();
+	ec.doDraw();
 }
 
-function drawElevation(){
-	myPlot = $.plot($('#elevation'), 
-			[ {label : '高程', data: elevationDataArray, hoverable: true }
-			  ,{label : '航线', data: flightDataArray, hoverable: true ,highlightColor: "rgba(0, 255, 0, 0.8)" }
-			  ,{data:pointsDataArray,points: { show: true }}
-			],
-			{	crosshair: {mode: 'x'}
-				,grid: {hoverable: true,clickable: true }
-				,xaxis :{tickFormatter: function (val, axis) {   
-					return val/1000;}}
-				,yaxis :{max: 3000}
-			});
+ElevationChart.prototype.getIndexByDist=function(dist){
+	var me = this;
 	
-	$("#elevation").bind("plotclick", function (event, pos, item) {
+	if(me.pointsDataArray.length>0){
+		for(var i = 0 ;i<me.pointsDataArray.length;i++){
+			if( dist < ec.pointsDataArray[i][0] ){
+				return i>1? i: 1;
+			}
+		}
+	}else{
+		return 1;
+	}
+};
+
+ElevationChart.prototype.doDraw =function (){
+	var me = this;
+	document.getElementById('chartNode').style.display='block';
+	me.myPlot = $.plot($('#chartNode'), 
+			[ {label : '高程', data: me.elevationDataArray, hoverable: true, lines: { fill: 0.9 }, color:"rgba(240,190,77,0.9)"  }
+			  ,{label : '航线', data: me.flightDataArray, hoverable: true  , xaxis: 1,color: "rgba(63,156,233,0.9)"}
+			  ,{data:me.pointsDataArray,points:  { show:true , symbol: "diamond" ,radius: 5 },xaxis: 2 ,color : "rgba(235,67,67,0.9)"}
+			],
+			{	//crosshair: {mode: 'x'},
+				grid: {hoverable: true,clickable: true,backgroundColor : {colors : ["rgba(137,203,235,1)", "rgba(182,237,243,1)"]} }
+				,
+				xaxes : [{tickFormatter: function (val, axis) { return val/1000;},font: {weight: "bold",color: "rgba(255,255,255,1)"},labelHeight: 10},
+				         {font: {color: "rgba(255,255,255,1)"}, ticks : me.pointsTicks,labelHeight: 10 }]
+				,yaxis :{font: {weight: "bold",color: "rgba(255,255,255,1)"}}
+				,legend: { show:false,noColumns : 2}
+			});
+	$("<div id='tooltipEC'></div>").css({
+		position: "absolute",
+		display: "none",
+		border: "1px solid #fdd",
+		padding: "2px",
+		"background-color": "#fee",
+		"white-space": "nowrap",
+		opacity: 0.80
+	}).appendTo("body");
+	
+	
+	$("#chartNode").bind("plothover", function (event, pos, item) {
 	    // axis coordinates for other axes, if present, are in pos.x2, pos.x3, ...
 	    // if you need global screen coordinates, they are pos.pageX, pos.pageY
 
+		if (item) {
+			if(item.seriesIndex==2){
+				$("#tooltipEC").html(linePoints[item.dataIndex][2]+"</br>" 
+						+ "海拔："+ me.pointsDataArray[item.dataIndex][1].toFixed(0) +" m</br>" 
+						+ "里程："+ (me.pointsDataArray[item.dataIndex][0]/1000).toFixed(1) +" km</br>")
+				.css({top: item.pageY-50, left: item.pageX+15+$("#tooltipEC").width() > $(window).width() ? $(window).width()-$("#tooltipEC").width()- 10 : item.pageX+5})
+				.fadeIn(200);
+			};
+			if(item.seriesIndex==0){
+				$("#tooltipEC").html("海拔："+ me.elevationDataArray[item.dataIndex][1].toFixed(0) +" m</br>" 
+						+ "里程："+ (me.elevationDataArray[item.dataIndex][0]/1000).toFixed(1) +" km</br>")
+				.css({top: item.pageY-36, left: item.pageX+15+$("#tooltipEC").width() > $(window).width() ? $(window).width()-$("#tooltipEC").width()- 10 : item.pageX+5})
+				.fadeIn(200);
+			};
+		} else {
+			$("#tooltipEC").hide();
+		}
+	});
+	
+	$("#chartNode").bind("plotclick", function (event, pos, item) {
+		
 	    if (item) {
-	    	myPlot.unhighlight();
-	    	myPlot.highlight(item.series, item.datapoint);
-	    	index_hightlight_point= item.dataIndex;
+	    	me.myPlot.unhighlight();
+	    	me.myPlot.highlight(item.series, item.datapoint);
+	    	current_sample_index= item.dataIndex;
 	    	var dataArray = item.series.data;
 	        lastPos= [dataArray[item.dataIndex][2], dataArray[item.dataIndex][3],FLIGHTHEIGHT];
-	        global.drawRoute2(lastPos);
+	        global.drawFlyRoute(lastPos);
 	        cc.jumpTo(dataArray[item.dataIndex][2], dataArray[item.dataIndex][3],dataArray[item.dataIndex][0]);
 	    }
 	});
-	drawRightBottomLabel();
-}
+	me.redraw();
+	me.markPlane(current_sample_index);
+	me.drawCloud();
+};
 
-function redraw(){
-	myPlot.draw();
-	drawRightBottomLabel();
-}
-
-function drawRightBottomLabel(){
+ElevationChart.prototype.drawCloud=function (){
+	var me=this;
 	
-	var canvas = myPlot.getCanvas();
+	if(me.elevationDataArray.length == 0  ) return;
+	var canvas = me.myPlot.getCanvas();
+	var ctx = canvas.getContext("2d");
+	//start 
+	var x = me.myPlot.pointOffset({ x: me.virtual_point_distance,  y: 1500 }).left;
+	var y = me.myPlot.pointOffset({ x: me.virtual_point_distance,  y: 1500 }).top;
+	var x0 = me.myPlot.pointOffset({x:0,y:0}).left;
+	//云
+	ctx.fillStyle="#ffffff";
+	ctx.fillRect(x0 , y ,x -x0 ,5);
+
+	var start_airport_pos = me.myPlot.pointOffset({x:me.elevationDataArray[0][0],y:me.elevationDataArray[0][1]});
+	ctx.fillStyle="rgba(75,247,111,0.8)";
+	ctx.beginPath();
+	ctx.moveTo(start_airport_pos.left,start_airport_pos.top - 10);
+	ctx.lineTo(start_airport_pos.left,start_airport_pos.top - 20);
+	ctx.arc(start_airport_pos.left, start_airport_pos.top , 20, Math.PI * 1.5, Math.PI * 2 ,  false);
+	ctx.lineTo(start_airport_pos.left + 10 ,start_airport_pos.top );
+	ctx.arc(start_airport_pos.left, start_airport_pos.top , 10, 0, Math.PI * 1.5 ,  true );
+	ctx.closePath();
+	ctx.fill();
+	
+	//end 
+	var xe = me.myPlot.pointOffset({x:ec.elevationDataArray[ec.elevationDataArray.length-1][0],y:0}).left;
+	var ye = me.myPlot.pointOffset({x:0,y:1200}).top;
+	ctx.fillStyle="#ffffff";
+	ctx.fillRect(xe - (x -x0) , ye ,x -x0 ,5);
+	
+	var end_airport_pos = me.myPlot.pointOffset({x:me.elevationDataArray[ec.elevationDataArray.length-1][0],y:me.elevationDataArray[ec.elevationDataArray.length-1][1]});
+	ctx.fillStyle="rgba(251,79,79,0.8)";
+	ctx.beginPath();
+	ctx.moveTo(end_airport_pos.left,end_airport_pos.top - 10);
+	ctx.lineTo(end_airport_pos.left,end_airport_pos.top - 20);
+	ctx.arc(end_airport_pos.left, end_airport_pos.top , 20, Math.PI * 1.5, Math.PI  ,  true);
+	ctx.lineTo(end_airport_pos.left - 10 ,end_airport_pos.top );
+	ctx.arc(end_airport_pos.left, end_airport_pos.top , 10, Math.PI , Math.PI * 1.5 ,  false );
+	ctx.closePath();
+	ctx.fill();
+};
+
+ElevationChart.prototype.redraw=function (){
+	var me = this;
+	me.myPlot.draw();
+	me.drawRightBottomLabel();
+	me.drawCloud();
+};
+
+ElevationChart.prototype.drawRightBottomLabel= function (){
+	return ;
+	var me = this;
+	var canvas = me.myPlot.getCanvas();
 	var ctx = canvas.getContext("2d");
 	ctx.globalAlpha=1;
 	ctx.globalCompositeOperation="source-over";
 	ctx.fillStyle="#ffffff";
 	ctx.fillRect(canvas.width-40, canvas.height-16,40,16);
 	ctx.fillStyle="#000000";
-	//ctx.fillText(Math.round(distance/1000,1)+'km', canvas.width-32, canvas.height-4);
-}
+	ctx.fillText(Math.round(distance/1000,1)+'km', canvas.width-32, canvas.height-4);
+};
 
+ElevationChart.prototype.markPlane=function (_i){
+	var me = this;
+	
+	if(me.flightDataArray.length==0)return;
+	var canvas = me.myPlot.getCanvas();
+	var ctx = canvas.getContext("2d");
+	
+	var pos = me.myPlot.pointOffset({ x: me.flightDataArray[_i][0], y: me.flightDataArray[_i][1] });
+	ctx.drawImage(me.img,pos.left-8,pos.top-8);
+	current_sample_index=_i;
+};
+
+ElevationChart.prototype.markTarget =  function(_i){
+	var me = this;
+	me.myPlot.unhighlight();
+	me.myPlot.highlight(2, _i);
+	
+	var pageX = me.myPlot.pointOffset({x:me.pointsDataArray[_i][0],y:me.pointsDataArray[_i][1]}).left+$("#chartNode").offset().left;
+	var pageY = me.myPlot.pointOffset({x:me.pointsDataArray[_i][0],y:me.pointsDataArray[_i][1]}).top+$("#chartNode").offset().top;
+	$("#tooltipEC").hide();
+	$("#tooltipEC").html("目标："+linePoints[_i][2]+"</br>" 
+			+ "海拔："+ me.pointsDataArray[_i][1].toFixed(0) +" m</br>" 
+			+ "里程："+ (me.pointsDataArray[_i][0]/1000).toFixed(1) +" km</br>")
+	.css({top: pageY-50, left: pageX+15+$("#tooltipEC").width() > $(window).width() ? $(window).width()-$("#tooltipEC").width()- 10 : pageX+5})
+	.fadeIn(200);
+}
+//--------------------------ControlCenter ---------------//
 //页面控制调度
 function ControlCenter(){
 	var me = this;
 	
-	
 }
+
+var cc = new ControlCenter();
+
+ControlCenter.prototype.globalInit=function(){
+	drawElevation();
+	flight_distance=0;
+	current_sample_index=0;
+	
+	$("#map3dControl input[type='input']").val(0);
+};
+
 
 //跳转航线点  俯视图 ，高程图 -> 三维
 ControlCenter.prototype.jumpTo = function (lat ,lon , _distance ){
 	if(_distance){
 		flight_distance=_distance;
+		if(plane){
+			if(plane.isMove()){
+				stopPlane();
+				plane.teleportToRoutePoint(lat,lon,ec.getIndexByDist(_distance));
+				startPlane();
+			}else{
+				plane.teleportToRoutePoint(lat,lon,ec.getIndexByDist(_distance));
+			}
+		}
+		cc.planeMove();
+		global.removeTargets();
+		global.drawTarget();
+		ec.markTarget(currentIndex);
+	}else{//没传distance ，不动飞机，移动视角到该点
+		if(global)global.cameraMove(lat, lon,10,2000);
 	}
 	
-	if(plane){
-		if(plane.isMove()){
-			stopPlane();
-			plane.teleportToRoutePoint(lat,lon);
-			startPlane();
-		}else{
-			plane.teleportToRoutePoint(lat,lon);
-		}
-	}
+	
 };
-var index_hightlight_point = 0;
 ControlCenter.prototype.planeMove = function(){
 	showCurrent(plane.model.getLocation().getLongitude(), plane.model.getLocation().getLatitude());
 	//global.addRoutePoint([plane.model.getLocation().getLatitude(),plane.model.getLocation().getLongitude(), plane.model.getLocation().getAltitude()]);
-	var i=index_hightlight_point ;
-	for(;i<flightDataArray.length;i++){
-		if(flight_distance < flightDataArray[i][0]){
-			myPlot.unhighlight();
-			//myPlot.highlight(1, i-1);
-			var canvas = myPlot.getCanvas();
-			var ctx = canvas.getContext("2d");
-			
-			var img = new Image();
-			img.src = basePath +'earthview/resource/plane_icon.png';
-			
-			var pos = myPlot.pointOffset({ x: flightDataArray[i][0], y: flightDataArray[i][1] });
-			redraw();
-			ctx.drawImage(img,pos.left-8,pos.top-8);
-			index_hightlight_point=i;
+	var i=current_sample_index==0? 0 : current_sample_index-1;
+	for(;i<ec.flightDataArray.length;i++){
+		if(flight_distance <=ec.flightDataArray[i][0]){
+			current_sample_index=i;
+			ec.redraw();
+			ec.markPlane(current_sample_index);
 			break;
 		}
 	}
-	myPlot.unhighlight();
-	myPlot.highlight(2, currentIndex);
 };
 
 ControlCenter.prototype.targetChange = function(_i){
 	global.removeTargets();
 	global.drawTarget();
-	myPlot.unhighlight();
-	myPlot.highlight(2, _i);
+	ec.markTarget(_i);
 };
 
 ControlCenter.prototype.planeStart = function(){
 	lastPos=null;
-	for (i=0 ;i<linePlacemark.length ;i++){
-		global.ge.getFeatures().removeChild(linePlacemark[i]);
-	}
-	
+	global.cleanLines();
+	linePlacemarks = [];
+	prepareRoute();
 };

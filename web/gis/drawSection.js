@@ -36,6 +36,10 @@ function gis_drawSection(points, planHeight, drawChart) {
 //	ad[3]='12';
 //	alert(ad.length);
 //	alert(ad[1]==undefined);
+	FLIGHTHEIGHT=planHeight;
+	drawElevation();
+	return;
+	
 	var myJsonStr = '{"points":' + points + '}';
 	mpJson = JSON.parse(myJsonStr);
 	var multipoint = new esri.geometry.Multipoint(mpJson);

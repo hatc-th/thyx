@@ -14,7 +14,7 @@ var STEER_ROLL = -1.0;
 var ROLL_SPRING = 0.25;
 var ROLL_DAMP = -0.16;
 
-var ACCEL = 100 ; 
+var ACCEL = 100 ; //前进的加速度
 
 function Plane(_modelURL) {
   var me = this;
@@ -49,9 +49,7 @@ function Plane(_modelURL) {
   me.fastTimer = 0;
   me.popupTimer = 0;
 
-  ge.getOptions().setFlyToSpeed(100);  // don't filter camera motion
-
-  window.google.earth.fetchKml(ge, _modelURL? _modelURL: basePath + MODEL_URL,
+  window.google.earth.fetchKml(global.ge, _modelURL? _modelURL: basePath + MODEL_URL,
               function(obj) { me.finishInit(obj); });
   
 }
@@ -68,40 +66,40 @@ Plane.prototype.finishInit = function(kml) {
   me.orientation = me.model.getOrientation();
   me.location = me.model.getLocation();
 
-  me.model.setAltitudeMode(ge.ALTITUDE_ABSOLUTE);
+  me.model.setAltitudeMode(me.ge.ALTITUDE_ABSOLUTE);
   //me.orientation.setHeading(100);
   me.model.setOrientation(me.orientation);
 
-  ge.getFeatures().appendChild(me.placemark);
+  me.ge.getFeatures().appendChild(me.placemark);
 
-  me.balloon = ge.createHtmlStringBalloon('');
+  me.balloon = me.ge.createHtmlStringBalloon('');
   me.balloon.setFeature(me.placemark);
   me.balloon.setMaxWidth(200);
 
   //初始化位置
+  linePlacemarks=[];
   prepareRoute();
   moveToStart();
-  plane.adjustPosition();
   me.lastMillis = (new Date()).getTime();
 
   var href = window.location.href;
   var pagePath = href.substring(0, href.lastIndexOf('/')) + '/';
 
-  google.earth.addEventListener(ge, "frameend", afterFrameEnd);
+  google.earth.addEventListener(me.ge, "frameend", afterFrameEnd);
   
-  ge.getWindow().blur();
+  me.ge.getWindow().blur();
   // If the user clicks on the Earth window, try to restore keyboard
-  // focus back to the page.
-  /*google.earth.addEventListener(ge.getWindow(), "mouseup", function(event) {
-      ge.getWindow().blur();
+  // focus back to the pame.ge.
+  /*google.earth.addEventListener(me.ge.getWindow(), "mouseup", function(event) {
+      me.ge.getWindow().blur();
   	});
   */
 }
 
-leftButtonDown = false;
-rightButtonDown = false;
-gasButtonDown = false;
-reverseButtonDown = false;
+var leftButtonDown = false;
+var rightButtonDown = false;
+var gasButtonDown = false;
+var reverseButtonDown = false;
 
 function keyDown(event) {
   if (!event) {
@@ -164,7 +162,7 @@ Plane.prototype.tick = function() {
     dt = 0.25;
   }
   me.lastMillis = now;
-  //message("ticking..."+me.lastMillis);
+  //message("ticking...");
   var c0 = 1;
   var c1 = 0;
 
@@ -184,7 +182,7 @@ Plane.prototype.tick = function() {
 
   var absSpeed = V3.length(me.vel);
 
-  var groundAlt = ge.getGlobe().getGroundAltitude(lla[0], lla[1]);
+  var groundAlt = me.ge.getGlobe().getGroundAltitude(lla[0], lla[1]);
   var airborne = false;
   var steerAngle = 0;
   //辅助转向
@@ -282,7 +280,7 @@ Plane.prototype.tick = function() {
   }
   
 
-  // Air drag.
+  // Air drag. 空气阻力
   //
   // Fd = 1/2 * rho * v^2 * Cd * A.
   // rho ~= 1.2 (typical conditions)
@@ -313,7 +311,7 @@ Plane.prototype.tick = function() {
     me.vel = V3.sub(me.vel, V3.scale(veldir, drag * dt));
   }
   
-  groundAlt = ge.getGlobe().getGroundAltitude(lla[0], lla[1]);
+  groundAlt = me.ge.getGlobe().getGroundAltitude(lla[0], lla[1]);
   //控制爬升和下降的加速度
   // Gravity
   if(gasButtonDown){
@@ -329,26 +327,34 @@ Plane.prototype.tick = function() {
   
 
   // Move.
+  
+//  if(forwardSpeed * 3.6 > 1500 ){
+//	  forwardSpeed = 1500/3.6;
+//	  me.vel = V3.scale(me.modelFrame[1] , forwardSpeed);
+//  }
+	  
   var deltaPos = V3.scale(me.vel, dt);
   var old_lla= lla;
   me.pos = V3.add(me.pos, deltaPos);
   
-  el('vel').value=Math.round(forwardSpeed * 3.6);
   me.forwardSpeed = forwardSpeed;
-  el('height').value=Math.round(me.pos[2]/10)*10;
-  el('heading').value= me.model.getOrientation().getHeading();
+  
   gpos = V3.add(me.localAnchorCartesian,
                 M33.transform(me.localFrame, me.pos));
   lla = V3.cartesianToLatLonAlt(gpos);
   
   flight_distance += getDistance(old_lla[0], old_lla[1], lla[0], lla[1]);
-  el('distance').value= Math.round(flight_distance);
-  // Don't go underground.
+  //更新飞行状态
+  $('#vel').val(Math.round(forwardSpeed * 3.6));
+  $('#height').val(Math.round(me.pos[2]/10)*10);
+  $('#heading').val(me.model.getOrientation().getHeading());
+  $('#distance').val(Math.round(flight_distance));
   
+  // Don't go underground.
   if (me.pos[2] < groundAlt) {
     me.pos[2] = groundAlt;
   }
-
+  
   var normal = estimateGroundNormal(gpos, me.localFrame);
   
   if (airborne) {
@@ -360,7 +366,7 @@ Plane.prototype.tick = function() {
     if (speedOutOfGround < 0) {
       me.vel = V3.add(me.vel, V3.scale(normal, -speedOutOfGround));
     }
-
+    
     // Make our orientation follow the ground.
     c0 = Math.exp(-dt / 0.25);
     c1 = 1 - c0;
@@ -385,36 +391,37 @@ Plane.prototype.tick = function() {
   // Spring back to center, with damping.
   me.rollSpeed += (ROLL_SPRING * -me.roll + ROLL_DAMP * me.rollSpeed);
   me.roll += me.rollSpeed * dt;
-  me.roll = clamp(me.roll, -85, 85);
+  me.roll = clamp(me.roll, -45, 45);
   absRoll -= me.roll;
 
   me.orientation.set(newhtr[0], newhtr[1], absRoll);
   
-  var imgR = 0 //舱内图片旋转角度
+  var imgR = 0 ;//舱内图片旋转角度
   
   imgR = absRoll/4 ;
   if(imgR>20){
 	  imgR= 20;
   }else if(imgR<-20){
-	  imgR = -20
+	  imgR = -20;
   }
   
   global.rotate(imgR);
   //添加轨迹
   global.addRoutePoint([plane.model.getLocation().getLatitude(),plane.model.getLocation().getLongitude(), plane.model.getLocation().getAltitude()]);
   //me.tickPopups(dt);
-  if(cameraMode == "left"){
+  if(global.cameraMode == "left"){
 	  global.cameraLeft();
-  }else if (cameraMode == "right"){
+  }else if (global.cameraMode == "right"){
 	  global.cameraRight();
-  }else if (cameraMode == "board"){
+  }else if (global.cameraMode == "board"){
 	  global.cameraOnboard();
   }else{
 	  me.cameraFollow(dt, gpos, me.localFrame);
   }
+  
   // Hack to work around focus bug
   // TODO: fix that bug and remove this hack.
-  //ge.getWindow().blur();
+  //me.ge.getWindow().blur();
 };
 
 // TODO: would be nice to have globe.getGroundNormal() in the API.
@@ -431,7 +438,7 @@ function estimateGroundNormal(pos, frame) {
   var pos1 = V3.sub(pos, frame[0]);
   var pos2 = V3.add(pos, frame[1]);
   var pos3 = V3.sub(pos, frame[1]);
-  var globe = ge.getGlobe();
+  var globe = global.ge.getGlobe();
   function getAlt(p) {
     var lla = V3.cartesianToLatLonAlt(p);
     return globe.getGroundAltitude(lla[0], lla[1]);
@@ -454,16 +461,16 @@ Plane.prototype.scheduleTick = function() {
 Plane.prototype.cameraCut = function() {
   var me = this;
   var lo = me.model.getLocation();
-  var la = ge.createLookAt('');
+  var la = me.ge.createLookAt('');
   la.set(lo.getLatitude(), lo.getLongitude(),
 		 lo.getAltitude() /* altitude */,
-		 ge.ALTITUDE_ABSOLUTE,
+		 me.ge.ALTITUDE_ABSOLUTE,
          //fixAngle(180 + me.model.getOrientation().getHeading() + 45),
          me.model.getOrientation().getHeading() ,
          70, /* tilt */
          50 /* range */
          );
-  ge.getView().setAbstractView(la);
+  me.ge.getView().setAbstractView(la);
 };
 
 var camHeadingOffset=0; //视角偏移量
@@ -473,7 +480,7 @@ Plane.prototype.cameraFollow = function(dt, truckPos, localToGlobalFrame) {
   var c0 = Math.exp(-dt / 0.5);
   var c1 = 1 - c0;
 
-  var la = ge.getView().copyAsLookAt(ge.ALTITUDE_RELATIVE_TO_GROUND);
+  var la = me.ge.getView().copyAsLookAt(me.ge.ALTITUDE_RELATIVE_TO_GROUND);
 
   var truckHeading = me.model.getOrientation().getHeading();
   var camHeading = la.getHeading();
@@ -494,11 +501,11 @@ Plane.prototype.cameraFollow = function(dt, truckPos, localToGlobalFrame) {
   var camLla = V3.cartesianToLatLonAlt(camPos);
   var camLat = camLla[0];
   var camLon = camLla[1];
-  var camAlt = camLla[2] - ge.getGlobe().getGroundAltitude(camLat, camLon);
+  var camAlt = camLla[2] - me.ge.getGlobe().getGroundAltitude(camLat, camLon);
   
-  la.set(camLat, camLon, camAlt+10 , ge.ALTITUDE_RELATIVE_TO_GROUND, 
+  la.set(camLat, camLon, camAlt+10 , me.ge.ALTITUDE_RELATIVE_TO_GROUND, 
         fixAngle(heading + camHeadingOffset), 80 /*tilt*/, 50 /*range*/);
-  ge.getView().setAbstractView(la);
+  me.ge.getView().setAbstractView(la);
 };
 
 
@@ -511,14 +518,16 @@ Plane.prototype.teleportTo = function(lat, lon, heading , absALT) {
 	me.model.getLocation().setLatitude(lat);
 	me.model.getLocation().setLongitude(lon);
 	var finalALt = 0;
-	var alt = ge.getGlobe().getGroundAltitude(lat, lon);
+	var alt = me.ge.getGlobe().getGroundAltitude(lat, lon);
 	me.tempAlt = HEIGHT + alt;
-	
+	me.vel = [0, 0, 0];
 	if(!absALT){
-		//添加事件使飞机的位置变化能及时显示，解决了由于在不同的地点取一个点的海拔高度不一致的问题
-		google.earth.addEventListener(ge, "frameend", adjustPosHandler);
+		//添加事件监控因地形载入延迟造成的海拔高度不准的问题
+		google.earth.addEventListener(me.ge, "frameend", adjustPosHandler);
+		//五秒后自动移除监听器
+		setTimeout("google.earth.removeEventListener(global.ge, 'frameend', adjustPosHandler);",5000);
+		//console.log("添加监视"+[me.ge,lat, lon,me.tempAlt]);
 		finalALt = HEIGHT + alt;
-		me.vel = [0, 0, 0];
 	}else{
 		finalALt = absALT;
 		
@@ -543,39 +552,46 @@ Plane.prototype.teleportTo = function(lat, lon, heading , absALT) {
 	
 	me.cameraCut();
 };
-
-Plane.prototype.teleportToRoutePoint =  function(lat, lon){
-	var me = this;
-	if(!me) return;
-	
-	var targetIndex = -1;
-	//判断输入的点距航线上各点的距离，找出下一个目标点，作为飞行的方向
-	if(linePoints.length==2){
-		targetIndex = 1;
-	}else{//航线点大于2 的情况
-		var dis = [];
-		for(var i=0;i< linePoints.length ;i++){
-			var dst= getDistance(lat, lon, linePoints[i][0], linePoints[i][1]);
-			if(i<2){
-				dis[i]=[i,dst];
-			}else{
-				if(dst < dis[0][1]){
-					dis[1] = dis[0][1]<dis[1][1]?dis[0]:dis[1];
-					dis[0] = [i,dst];
-				}else{
-					if(dst<dis[1][1]){
-						dis[1] = [i,dst];
-					}
-				}
-			}
-		}
-		targetIndex = dis[0][0] > dis[1][0] ? dis[0][0] : dis[1][0] ; 
+//自动调整地点的海拔高度
+Plane.prototype.adjustPosition = function (){
+	var me = this; 
+	if(me.isMove()){
+		google.earth.removeEventListener(me.ge, "frameend", adjustPosHandler);
+		return;
 	}
+	var lat = me.model.getLocation().getLatitude();
+	var lon = me.model.getLocation().getLongitude();
+	var nowAlt = (HEIGHT + me.ge.getGlobe().getGroundAltitude(lat, lon) );
+	if (  nowAlt != me.tempAlt ){
+		me.teleportTo(lat, lon, currentHeading /180 * Math.PI, nowAlt);
+		//调用后移除相应的事件，避免事件流过于复杂引起飞机运动缓慢
+		//google.earth.removeEventListener(me.ge, "frameend", adjustPosHandler);
+		return;
+	}
+	//message("监听海拔高度变化:"+nowAlt ,1);
+};
+
+function adjustPosHandler(event){
+	plane.adjustPosition();
+}
+
+function afterFrameEnd(event){
+	if(plane.doTick){
+		plane.tick();
+	}
+}
+
+Plane.prototype.teleportToRoutePoint =  function(lat, lon , targetIndex ){
+	var me = this;
+	//防止多次调用
+	if(me.lastJumpLat==lat && me.lastJumpLon == lon) return ;
+	me.lastJumpLat = lat;
+	me.lastJumpLon = lon;
 	
 	currentIndex = targetIndex;
 	currentTarget = linePoints[targetIndex];
 	currentHeading = getAngle( [lat,lon,0], currentTarget);
-	if(!currentHeading){
+	if(!currentHeading){ //直接跳到航线点的情况
 		currentIndex = targetIndex+1;
 		currentTarget = linePoints[targetIndex+1];
 		currentHeading = getAngle( [lat,lon,0], currentTarget);
@@ -630,7 +646,7 @@ function fixAngle(a) {
 //---------------------------------extend for flight --------------------//
 
 //求b相对于a的方位角  依赖 flyPlan.js 的 getDistance 方法
-function getAngle2(a ,b ){
+function getAngle(a ,b ){
 	var lenLo = getDistance(b[0],a[1],b[0],b[1] ); //经度
 	var lenLa = getDistance(a[0],a[1],b[0],a[1] ); //纬度
 	var dist =  getDistance(a[0],a[1],b[0],b[1] );
@@ -655,36 +671,6 @@ function getAngle2(a ,b ){
 	//message("目标角:"+fixAngle(ret));
 	return fixAngle(ret);
  
-}
-
-
-function getAngle(a ,b ){
-	
-	return getAngle2(a ,b );
-	var lenLo = Math.abs(b[1]-a[1]); //经度
-	var lenLa = Math.abs(b[0]-a[0]); //纬度
-	
-	var ret ;
-	
-	var r = Math.atan(lenLo/lenLa)  * 180 / Math.PI ;
-	//第一象限 
-	if( b[1]  >  a[1] && b[0] > a[0]  ){
-		ret = r;
-	}//第四象限
-	else if ( b[1]  >  a[1] && b[0] < a[0]  ){
-		ret =  180 - r;
-	}
-	//第三象限
-	else if ( b[1]  <  a[1] && b[0] < a[0]  ){
-		ret =  r + 180;
-	}
-	//第二象限
-	else if ( b[1] <  a[1] && b[0] > a[0]  ){
-		ret =  360 -  r;
-	}
-	//message("目标角:"+fixAngle(ret));
-	return fixAngle(ret);
-	
 }
 
 
@@ -714,11 +700,11 @@ Plane.prototype.checkPoints = function (){
 		cc.targetChange(currentIndex);
 	}
 	
-	el('target').value=currentIndex;
-	el('targetLa').value=currentTarget[0];
-	el('targetLo').value=currentTarget[1];
-	el('targetR').value=currentHeading;
-	el('dis').value=parseInt(dist);
+	$('#target').val(currentIndex);
+	$('#targetLa').val(currentTarget[0]);
+	$('#targetLo').val(currentTarget[1]);
+	$('#targetR').val(currentHeading);
+	$('#dis').val(parseInt(dist));
 	
 }
 
@@ -731,20 +717,22 @@ var currentTarget=null; // 当前目标点
 var lastTarget =null;
 var currentIndex; //当前路径点索引
 
-var startPos , endPos; //起止点
+var startPos , endPos; //起点，终点
 
-var currentHeading=0;
+var currentHeading=0; //飞机朝向角
 
-var FLIGHTHEIGHT=2000;
-var HEIGHT=0;
-var flight_distance=0; //航程；
+var FLIGHTHEIGHT=2000; //飞行高度
+var HEIGHT=0;//地面点相对高度
+var flight_distance=0; //飞行里程；
+var current_sample_index = 0; //当前采样点索引
 // 等分航线点
 function getLinePoints( a ,b, n ){
 	linePoints = coordinateLine;
 	if(linePoints.length==0){
-		linePoints = [[ 31.43458,104.736,0],[ 31.41,104.83,0],[ 31.40,104.92,0],[ 31.42,104.99,0],[ 31.333,104.9879,0],[ 31.25,104.978,0],
-	                  [ 31.186,104.85,0],[ 31.08,104.749,0],[ 31.045,104.68,0],[ 31.0256,104.598,0],[ 30.986,104.546,0],[ 30.97,104.415,0],
-	                  [ 30.95,104.33,0],[ 30.875,104.32,0],[ 30.816,104.376,0],[ 30.8653,104.3859,0],[ 30.87,104.3957,0]];
+		linePoints = [[ 31.43458,104.736,"测试起点"],[ 31.41,104.83,"测试点1"],[ 31.40,104.92,"测试点2"],[ 31.42,104.99,"测试点3"],[ 31.333,104.9879,"测试点4"],
+		              [ 31.25,104.978,"测试点5"], [ 31.186,104.85,"测试点6"],[ 31.08,104.749,"测试点7"],[ 31.045,104.68,"测试点8"],[ 31.0256,104.598,"测试点9"],
+		              [ 30.986,104.546,"测试点10"],[ 30.97,104.415,"测试点11"],[ 30.95,104.33,"测试点12"],[ 30.875,104.32,"测试点13"],[ 30.816,104.376,"测试点14"],
+		              [ 30.8653,104.3859,"测试点15"],[ 30.87,104.3957,"测试终点"]];
 	}
 	if(linePoints.length>0){
 		startPos=linePoints[0];
@@ -781,16 +769,15 @@ function prepareRoute(){
 	currentHeading=getAngle(startPos, currentTarget);
 	plane.orientation.setHeading(currentHeading);
 	plane.cameraCut();
-	global.drawRoute();
-	message(coordinateLine);
+	global.drawFlyRoute();
+	//message(coordinateLine);
 }
  
 function go(){
 	currentTarget=null;
 	flight_distance=0;
-	index_hightlight_point=0;
+	current_sample_index=0;
 	cc.planeStart();
-	prepareRoute();
 	moveToStart();
 	startPlane();
 }
@@ -799,38 +786,10 @@ Plane.prototype.isMove = function (){
 	var me = this;
 	return me.doTick;
 }
-Plane.prototype.adjustPosition = function (){
-	var me = this; 
-	
-	var lat = me.model.getLocation().getLatitude();
-	var lon = me.model.getLocation().getLongitude();
-	//messageFix( (HEIGHT + ge.getGlobe().getGroundAltitude(lat, lon)) + "=? " +me.tempAlt );
-	if ( (HEIGHT + ge.getGlobe().getGroundAltitude(lat, lon)) != me.tempAlt ){
-		message("移动位置" + me.lastMillis,1);
-		me.teleportTo(lat, lon, currentHeading /180 * Math.PI);
-		//调用后移除相应的事件，避免事件流过于复杂引起飞机运动缓慢
-		google.earth.removeEventListener(ge, "frameend", adjustPosHandler);
-		return;
-	}
-	message("listening"+me.lastMillis ,1);
-	
-	
-};
 
-function afterFrameEnd(event){message("ticking..."+plane.lastMillis);
-	if(plane.doTick){
-		plane.tick();
-	}
-}
-
-function adjustPosHandler(event){
-	
-	plane.adjustPosition();
-	
-}
-var reportObj;
+var reportObj;  //定时器对象，每秒报告位置
 function startPlane(){
-	google.earth.addEventListener(ge, "frameend", afterFrameEnd);
+	google.earth.addEventListener(global.ge, "frameend", afterFrameEnd);
 	global.removeTargets();
 	global.drawTarget();
 	
@@ -838,45 +797,34 @@ function startPlane(){
 	plane.doTick = true;
 	//global.cameraBack();
 	//message("目标角:"+plane.model.getOrientation().getHeading());
-	
+	if(reportObj)clearInterval(reportObj);
 	reportObj= setInterval("reportPos()",1000);
 }
-
-
 
 function stopPlane(){
 	gasButtonDown = false;
 	plane.doTick = false;
-	google.earth.removeEventListener(ge, "frameend", afterFrameEnd);
-	
+	google.earth.removeEventListener(global.ge, "frameend", afterFrameEnd);
 	clearInterval(reportObj);
 }
 function moveToStart(){
 	moveTo(startPos);
 }
-function moveToNext(){
-	if(currentIndex<chkPoints.length-1){
-		plane.teleportToRoutePoint(chkPoints[currentIndex][0],chkPoints[currentIndex][1]);
-	}else{
-		plane.teleportToRoutePoint(endPos[0],endPos[1]);
-	}
-	//( 31.368632578694864,104.99279158947874 );
-}
 function moveToEnd(){
 	moveTo(endPos);
 }
-
 function moveTo(point){
 	if(!point) return;
 	
 	plane.teleportTo(point[0]	, point[1]	,currentHeading /180 * Math.PI);
+	current_sample_index=0;
+	cc.planeMove();
 }
 function message(val,index){
 	if(!index)index = 0;
-	
-	el('inforBox'+index).value=val;
+	if(plane) val= plane.lastMillis + '====\n' + val;
+	$('#inforBox'+index).val(val);
 }
-var index_hightlight_point = 0;
 function reportPos(){
 	if(plane){
 		message("当前位置："+plane.model.getLocation().getLatitude()+","+plane.model.getLocation().getLongitude(),1);
@@ -895,7 +843,7 @@ function changeSpeed(v){
 	if(ACCEL>300) {ACCEL=300;}
 	if(ACCEL<0) {ACCEL=1;}
 	
-	el('speed').value=ACCEL;
+	$('#speed').val(ACCEL);
 }
 
 

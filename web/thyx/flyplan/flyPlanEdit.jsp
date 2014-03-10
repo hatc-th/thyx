@@ -34,19 +34,7 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
 <!-- 地图操作需要引入的文件 -->
 <%@include file = "/gis/gis.inc"%>
 <!-- 三维模拟需要引入的文件 -->
-<script src="http://maps.google.com/maps/api/js?sensor=true&libraries=geometry"></script>
-<script type="text/javascript" src="http://www.google.com/jsapi" charset="utf-8"></script>
-<script type="text/javascript" src="./earthview/js/math3d.js" charset="utf-8"></script>
-<script type="text/javascript" src="./earthview/js/plane.js" charset="utf-8"></script>
-<script type="text/javascript" src="./earthview/js/global.js" charset="utf-8"></script>
-<script type="text/javascript" src="./earthview/js/jquery.flot.min.js" charset="utf-8"></script>
-<script type="text/javascript" src="./earthview/js/jquery.flot.crosshair.min.js" charset="utf-8"></script>
-<script type="text/javascript">
-
-
-var basePath ="<%=basePath %>";
-var cc = new ControlCenter();
-
+<%@include file = "/earthview/glb.inc"%>
 $(document).ready(function() {
 
 	$(".divShowScroll").niceScroll(
@@ -956,7 +944,7 @@ function clearGraphicInfoByCode() {
 				<!--==========设置上面圆角end===========-->
 				
 				<div id="fPlanRightBottomContext" class="fPlanRightBottomContext">
-					<div id ="elevation" style="width:99%;height:100%;margin-left:5px;background-color: #ffffff;"> </div>
+					
 					<div id="chartNode" data-dojo-type="dojox.charting.widget.Chart2D"  style="width:840px;height:150px;margin-left:5px;"></div>
 				</div>	
 				
@@ -1006,13 +994,14 @@ function clearGraphicInfoByCode() {
 		 </div>
 	</div>		
 	<!--==========================================================浮动菜单，版权信息=========================================================================-->
-	<div class="bottomButtonArea">
+	<div class="bottomButtonArea"  >
 		<div class="buttonArea">
 			<input class="buttonArea1" id="saveBut" type="button" value="  保 存" onClick="ajaxSaveFlyPlan('11');"/>&nbsp;&nbsp;
 			<input class="buttonArea2" id="commitBut"  type="button" value="  提 交" onClick="ajaxSaveFlyPlan('12');" />&nbsp;&nbsp;
 			<input class="buttonArea3" type="button" value="  返 回" onClick="goBack();"/>
+			
 			<input class="buttonArea3" type="button" value="  仿真" onClick="runGlobal();"/>
-			<input class="buttonArea3" type="button" value="高程" onclick="draw();" />
+			<input class="buttonArea3" type="button" value="  高程" onclick="drawElevation();" />
 		</div>
 	</div>
 	</form>
@@ -1021,8 +1010,7 @@ function clearGraphicInfoByCode() {
 
 <div id='map3dControl' class="bottomButtonArea" style="height: 20% ;width:100% ;float: left ;display:none;text-align: left;" >
 		
-		<span style="color: #FFFFFF" >速度：</span><input type="input" style="width:50px;" value="100" id="speed"  readonly />
-		<input type="input" style="width:60px;" value="0" id="vel"  readonly /><span style="color: #FFFFFF" >km/h</span>
+		<span style="color: #FFFFFF" >速度</span><input type="input" style="width:60px;" value="0" id="vel"  readonly /><span style="color: #FFFFFF" >km/h</span>
 		<input type="button" value="加速" onclick="changeSpeed(20);" />
 		<input type="button" value="减速" onclick="changeSpeed(-20);" />
 		<input type="button" value="舱内视角" onclick="global.addPanel();global.cameraOnboard();" />
@@ -1031,25 +1019,25 @@ function clearGraphicInfoByCode() {
 		<input type="button" value="左侧视角" onclick="global.removePanel();global.cameraLeft();" />
 		<br/>
 		
-		<span style="color: #FFFFFF" >航程</span><input type="input" style="width:60px;" value="0" id="distance"  readonly />
-		<span style="color: #FFFFFF" >高度</span><input type="input" style="width:60px;" value="0" id="height"  readonly />
+		<span style="color: #FFFFFF" >航程</span><input type="input" style="width:50px;" value="0" id="distance"  readonly />
+		<span style="color: #FFFFFF" >高度</span><input type="input" style="width:50px;" value="0" id="height"  readonly />
 		
 		<span style="color: #FFFFFF" >目标点：</span><input type="input" style="width:50px;" value="0" id="target"  readonly />
-		<span style="color: #FFFFFF" >纬度</span><input type="input" style="width:60px;" value="0" id="targetLa"  readonly />
-		<span style="color: #FFFFFF" >经度</span><input type="input" style="width:60px;" value="0" id="targetLo"  readonly />
+		<span style="color: #FFFFFF" >纬度</span><input type="input" style="width:50px;" value="0" id="targetLa"  readonly />
+		<span style="color: #FFFFFF" >经度</span><input type="input" style="width:50px;" value="0" id="targetLo"  readonly />
 		
-		<span style="color: #FFFFFF" >距离</span><input type="input" style="width:60px;" value="0" id="dis"  readonly />
-		<span style="color: #FFFFFF" >目标朝向</span><input type="input" style="width:60px;" value="0" id="targetR"  readonly />
-		<span style="color: #FFFFFF" >当前朝向</span><input type="input" style="width:60px;" value="0" id="heading"  readonly /><br/>
+		<span style="color: #FFFFFF" >距离</span><input type="input" style="width:50px;" value="0" id="dis"  readonly />
+		<span style="color: #FFFFFF" >目标朝向</span><input type="input" style="width:50px;" value="0" id="targetR"  readonly />
+		<span style="color: #FFFFFF" >当前朝向</span><input type="input" style="width:50px;" value="0" id="heading"  readonly /><br/>
 		<input type="button" value="开始" onclick="go()" /> 
 		<input type="button" value="计算航线" onclick="prepareRoute();" />
 		<input type="button" value="转到起点" onclick="moveToStart();" />
-		<input type="button" value="转到下一点" onclick="moveToNext();" />
 		<input type="button" value="转到终点" onclick="moveToEnd();" />
 		<input type="button" value="启动" onclick="startPlane()" /> 
 		<input type="button" value="停止" onclick="stopPlane()" />
 		<input type="button" value="空域" onclick="global.drawZone();" />
 		<input type="button" value="日照" onclick="global.showSun();" />
+		<input type="button" value="参考航线" onclick="global.drawRoute();" />
 		<br/>
 		<textarea type="input" rows="3" style="width: 45%;" id="inforBox0" ></textarea>
 		<textarea type="input" rows="3" style="width: 45%;" id="inforBox1" ></textarea>
