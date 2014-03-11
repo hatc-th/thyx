@@ -35,6 +35,8 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
 <%@include file = "/gis/gis.inc"%>
 <!-- 三维模拟需要引入的文件 -->
 <%@include file = "/earthview/glb.inc"%>
+
+<script type="text/javascript">
 $(document).ready(function() {
 
 	$(".divShowScroll").niceScroll(
@@ -1034,10 +1036,12 @@ function clearGraphicInfoByCode() {
 		<input type="button" value="转到起点" onclick="moveToStart();" />
 		<input type="button" value="转到终点" onclick="moveToEnd();" />
 		<input type="button" value="启动" onclick="startPlane()" /> 
-		<input type="button" value="停止" onclick="stopPlane()" />
+		<input type="button" value="停止" onclick="stopPlane()" /><br/>
+		测试功能
 		<input type="button" value="空域" onclick="global.drawZone();" />
 		<input type="button" value="日照" onclick="global.showSun();" />
 		<input type="button" value="参考航线" onclick="global.drawRoute();" />
+		<input type="button" value="改变尺寸" onclick="$('embed').css('height',$('embed').height()!=200?200:'100%');$('embed').parent().children();" />
 		<br/>
 		<textarea type="input" rows="3" style="width: 45%;" id="inforBox0" ></textarea>
 		<textarea type="input" rows="3" style="width: 45%;" id="inforBox1" ></textarea>

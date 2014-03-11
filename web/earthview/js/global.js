@@ -28,7 +28,7 @@ function runGlobal(){
 function Global() {
 	var me = this;
 
-	me.geocoder = new GClientGeocoder();
+	//me.geocoder = new GClientGeocoder();
 	me.ge = null;
 	me.plane = null;
 	me.routePlacemark = null;
@@ -478,7 +478,6 @@ ElevationChart.prototype.draw = function(){
 	
 	me.virtual_point_distance = -1;
 	me.virtual_point_num = -1;
-	
 };
 
 

@@ -8,5 +8,6 @@
 <script type="text/javascript" src="./earthview/js/jquery.flot.symbol.min.js" charset="utf-8"></script>
 
 <script type="text/javascript">
-
 var basePath ="<%=basePath %>";
+</script>
+
