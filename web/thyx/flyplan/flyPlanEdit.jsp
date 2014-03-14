@@ -437,7 +437,7 @@ function clearGraphicInfoByCode() {
 </script>
 
 </head>
-<body onclick=syjDTclick() onkeyup=syjDTkeyup() onload="resetSize1();" onresize="resetSize1();">
+<body onclick=syjDTclick() onkeyup=syjDTkeyup() onload="resetSize1();" onresize="resetSize1();" onkeydown="return keyDown(event);" onkeyup="return keyUp(event);">
 <div id="globalDiv" class="globalDiv">
 	<div class="navText">
 		飞行计划管理&nbsp;》飞行计划新建
@@ -1013,8 +1013,8 @@ function clearGraphicInfoByCode() {
 <div id='map3dControl' class="bottomButtonArea" style="height: 20% ;width:100% ;float: left ;display:none;text-align: left;" >
 		
 		<span style="color: #FFFFFF" >速度</span><input type="input" style="width:60px;" value="0" id="vel"  readonly /><span style="color: #FFFFFF" >km/h</span>
-		<input type="button" value="加速" onclick="changeSpeed(20);" />
-		<input type="button" value="减速" onclick="changeSpeed(-20);" />
+		<input type="button" value="加速" onclick="changeSpeed(100);" />
+		<input type="button" value="减速" onclick="changeSpeed(-100);" />
 		<input type="button" value="舱内视角" onclick="global.addPanel();global.cameraOnboard();" />
 		<input type="button" value="舱外视角" onclick="global.removePanel();global.cameraBack();" />
 		<input type="button" value="右侧视角" onclick="global.removePanel();global.cameraRight();" />

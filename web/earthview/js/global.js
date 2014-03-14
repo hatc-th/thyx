@@ -523,8 +523,8 @@ function elevationPathCallback (results, status){
   	    	var pto = new Object();
   	    	//pto.distance =  redondear((distance * i)/(1000 * (SAMPLE_COUNT - 1)));
   	    	if(i > 0 ){
-  	    		distance+= getDistance(results[i-1].location.d, results[i-1].location.e, 
-  	    				results[i].location.d, results[i].location.e );
+  	    		distance+= getDistance(results[i-1].location.lat(), results[i-1].location.lng(), 
+  	    				results[i].location.lat(), results[i].location.lng() );
   	    		if(distance_unit < 0){
   	    			distance_unit=distance;
   	    		}
@@ -534,27 +534,27 @@ function elevationPathCallback (results, status){
   	    	pto.elevation = results[i].elevation;
   	    	ec.ptos[i] = pto;      	    	
   	    	
-  	    	ec.elevationDataArray[i]=[pto.distance,pto.elevation,results[i].location.d,results[i].location.e];
+  	    	ec.elevationDataArray[i]=[pto.distance,pto.elevation,results[i].location.lat(),results[i].location.lng()];
   	    	if(i==0 || i==results.length-1){
   	    		ec.flightDataArray[i]=ec.elevationDataArray[i];
   	    	}else if(i + ec.virtual_point_num >= results.length){ //模拟降落 
   	    		ec.flightDataArray[i]=[pto.distance, FLIGHTHEIGHT - (i + ec.virtual_point_num -results.length +1) * ((FLIGHTHEIGHT- end_ap_ev) / (ec.virtual_point_num - 1)), 
-  	    		                       results[i].location.d,results[i].location.e];
+  	    		                       results[i].location.lat(),results[i].location.lng()];
   	    	}else if(distance >2000){
   	    		if(ec.virtual_point_num<0){
   	    			ec.virtual_point_num = i;
   	    			ec.virtual_point_distance=distance;
   	    			for(var n =1; n< ec.virtual_point_num;n++){//从起飞到爬升到航线高度，在机场2000米范围内虚拟 virtual_point_num 个点 ， 模拟起飞
   	    				ec.flightDataArray[n]=[n * distance_unit, n * ((FLIGHTHEIGHT- start_ap_ev)  / (ec.virtual_point_num - 1)) + start_ap_ev, 
-  	    				                       results[n].location.d,results[n].location.e];
+  	    				                       results[n].location.lat(),results[n].location.lng()];
   	    			}
   	    			
   	    		}
-  	    		ec.flightDataArray[i]=[pto.distance,FLIGHTHEIGHT,results[i].location.d,results[i].location.e];
+  	    		ec.flightDataArray[i]=[pto.distance,FLIGHTHEIGHT,results[i].location.lat(),results[i].location.lng()];
   	    	}
   	    	
   	    	if(FLIGHTHEIGHT > 0 && FLIGHTHEIGHT - pto.elevation <= 600) { // 当飞行高度低于最高障碍600米时，报警
-				addAreaSpaceConflictData("rs_ob",FLIGHTHEIGHT - pto.elevation ,{x:results[i].location.e ,y:results[i].location.d } );
+				addAreaSpaceConflictData("rs_ob",FLIGHTHEIGHT - pto.elevation ,{x:results[i].location.lat() ,y:results[i].location.lng() } );
 			}
   	    	
   	    }
@@ -627,14 +627,14 @@ function elevationLocationsCallback (results, status){
   	    	var pto = new Object();
   	    	//pto.distance =  redondear((distance * i)/(1000 * (SAMPLE_COUNT - 1)));
   	    	if(i > 0 ){
-  	    		distance+= getDistance(results[i-1].location.d, results[i-1].location.e, 
-  	    				results[i].location.d, results[i].location.e );
+  	    		distance+= getDistance(results[i-1].location.lat(), results[i-1].location.lng(), 
+  	    				results[i].location.lat(), results[i].location.lng() );
   	    	}
   	    	pto.distance = distance ;
   	    	pto.location = results[i].location;
   	    	pto.elevation = results[i].elevation;
   	    	
-  	    	ec.pointsDataArray[i]=[pto.distance,pto.elevation,results[i].location.d,results[i].location.e];
+  	    	ec.pointsDataArray[i]=[pto.distance,pto.elevation,results[i].location.lat(),results[i].location.lng()];
   	    	ec.pointsTicks[i]= [pto.distance, linePoints[i][2]];
   	    	
   	    }

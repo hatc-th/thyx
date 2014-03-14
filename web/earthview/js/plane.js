@@ -15,7 +15,7 @@ var ROLL_SPRING = 0.25;
 var ROLL_DAMP = -0.16;
 
 var ACCEL = 100 ; //前进的加速度
-
+var vel_limit = 1000; //速度限制
 function Plane(_modelURL) {
   var me = this;
 
@@ -311,6 +311,13 @@ Plane.prototype.tick = function() {
     me.vel = V3.sub(me.vel, V3.scale(veldir, drag * dt));
   }
   
+  if(forwardSpeed * 3.6 > vel_limit ){
+	  forwardSpeed = vel_limit/3.6;
+	  var upVel= me.vel[2]; //保留竖向速度
+	  me.vel = V3.scale(me.modelFrame[1] , forwardSpeed);
+	  me.vel[2]=upVel;
+  }
+  
   groundAlt = me.ge.getGlobe().getGroundAltitude(lla[0], lla[1]);
   //控制爬升和下降的加速度
   // Gravity
@@ -324,15 +331,8 @@ Plane.prototype.tick = function() {
   else{
 	  me.vel[2] -= 9.8 * dt;
   }
-  
 
   // Move.
-  
-//  if(forwardSpeed * 3.6 > 1500 ){
-//	  forwardSpeed = 1500/3.6;
-//	  me.vel = V3.scale(me.modelFrame[1] , forwardSpeed);
-//  }
-	  
   var deltaPos = V3.scale(me.vel, dt);
   var old_lla= lla;
   me.pos = V3.add(me.pos, deltaPos);
@@ -501,8 +501,8 @@ Plane.prototype.cameraFollow = function(dt, truckPos, localToGlobalFrame) {
   var camLla = V3.cartesianToLatLonAlt(camPos);
   var camLat = camLla[0];
   var camLon = camLla[1];
-  var camAlt = camLla[2] - me.ge.getGlobe().getGroundAltitude(camLat, camLon);
-  
+  var camAlt = camLla[2] - (me.ge.getGlobe().getGroundAltitude(camLat, camLon)<0?0:me.ge.getGlobe().getGroundAltitude(camLat, camLon));
+  //message (camAlt+10);
   la.set(camLat, camLon, camAlt+10 , me.ge.ALTITUDE_RELATIVE_TO_GROUND, 
         fixAngle(heading + camHeadingOffset), 80 /*tilt*/, 50 /*range*/);
   me.ge.getView().setAbstractView(la);
@@ -835,15 +835,12 @@ function reportPos(){
 }
 
 function changeSpeed(v){
-	if(v>0 && ACCEL< 20){v=1;}
-	if(v<0 && ACCEL<= 20){v=-1;}
 	
-	ACCEL+=v;
+	vel_limit+=v;
 	
-	if(ACCEL>300) {ACCEL=300;}
-	if(ACCEL<0) {ACCEL=1;}
+	if(vel_limit>=1500) {vel_limit=1500;}
+	if(vel_limit<=100) {vel_limit=100;}
 	
-	$('#speed').val(ACCEL);
 }
 
 

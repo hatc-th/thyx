@@ -17,6 +17,7 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
 <head>
 	<title>通航运行管理系统</title>
 	<meta charset="GBK" />
+	<META http-equiv="X-UA-Compatible" content="IE=9" > </META>
 	<link href="css/skin2/common/main.css" type="text/css" rel="stylesheet"/>
 	<link rel="Shortcut Icon" href="images2/logo.ico" type="image/x-icon" />
 	<link href="css/skin2/common/context.css" type="text/css" rel="stylesheet" />
