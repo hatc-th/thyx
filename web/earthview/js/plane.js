@@ -15,7 +15,8 @@ var ROLL_SPRING = 0.25;
 var ROLL_DAMP = -0.16;
 
 var ACCEL = 100 ; //前进的加速度
-var vel_limit = 1000; //速度限制
+var vel_limit = 200; //速度限制
+var vel_magnification = 1 ;//速度放大倍数 
 function Plane(_modelURL) {
   var me = this;
 
@@ -161,6 +162,9 @@ Plane.prototype.tick = function() {
   if (dt > 0.25) {
     dt = 0.25;
   }
+  //vel magnify
+  dt = dt * vel_magnification;
+  
   me.lastMillis = now;
   //message("ticking...");
   var c0 = 1;
@@ -323,9 +327,10 @@ Plane.prototype.tick = function() {
   // Gravity
   if(gasButtonDown){
 	  if(me.pos[2] < FLIGHTHEIGHT){
-		  me.vel[2] += 2 * 9.8 * dt;
+		  me.vel[2] += 0.5 * 9.8 * dt;
 	  }else{
-		  me.vel[2] -= 9.8 * dt;
+		  //me.vel[2] -= 9.8 * dt;
+		  me.vel[2] = 0;
 	  }
   }
   else{
@@ -346,10 +351,11 @@ Plane.prototype.tick = function() {
   flight_distance += getDistance(old_lla[0], old_lla[1], lla[0], lla[1]);
   //更新飞行状态
   $('#vel').val(Math.round(forwardSpeed * 3.6));
-  $('#height').val(Math.round(me.pos[2]/10)*10);
-  $('#heading').val(me.model.getOrientation().getHeading());
-  $('#distance').val(Math.round(flight_distance));
-  
+  $('#height').val(Math.round(me.pos[2]/100)*100);
+  $('#heading').val(me.model.getOrientation().getHeading().toFixed(2));
+  $('#distance').val((flight_distance/1000).toFixed(2));
+  $('#planelon').val(me.model.getLocation().getLongitude().toFixed(4));
+  $('#planelat').val(me.model.getLocation().getLatitude().toFixed(4));
   // Don't go underground.
   if (me.pos[2] < groundAlt) {
     me.pos[2] = groundAlt;
@@ -677,34 +683,38 @@ function getAngle(a ,b ){
 Plane.prototype.checkPoints = function (){
 	var me = this;
 	var curPos = [me.model.getLocation().getLatitude(),  me.model.getLocation().getLongitude() , 0 ];
-	
+	var dist=0;
 	if(currentTarget==null){
 		currentIndex=1;
 		lastTarget = chkPoints[0];
 		currentTarget = chkPoints[1] ;
 		cc.targetChange(1);
-	}
-	var dist= getDistance(curPos[0],curPos[1],currentTarget[0],currentTarget[1]);
-	if( dist < 1000   ){	
-		currentIndex++;
-		if(currentIndex==chkPoints.length ){
-			if(dist<=1000){
-				stopPlane();
-				alert("到达目的地 !" );
-				return;
+		dist= getDistance(curPos[0],curPos[1],currentTarget[0],currentTarget[1]);
+	}else{
+		dist= getDistance(curPos[0],curPos[1],currentTarget[0],currentTarget[1]);
+		if( dist < 500   ){	
+			currentIndex++;
+			if(currentIndex==chkPoints.length && plane.isMove()){
+				if(dist<=500){
+					stopPlane();
+					alert("到达目的地 !" );
+					return;
+				}
+				currentIndex--;
 			}
-			currentIndex--;
+			lastTarget=currentTarget;
+			currentTarget = chkPoints[currentIndex] ;
+			cc.targetChange(currentIndex);
 		}
-		lastTarget=currentTarget;
-		currentTarget = chkPoints[currentIndex] ;
-		cc.targetChange(currentIndex);
 	}
 	
+	
 	$('#target').val(currentIndex);
-	$('#targetLa').val(currentTarget[0]);
-	$('#targetLo').val(currentTarget[1]);
-	$('#targetR').val(currentHeading);
-	$('#dis').val(parseInt(dist));
+	$('#targetName').html(currentTarget[2]);
+	$('#targetLa').val(currentTarget[0].toFixed(4));
+	$('#targetLo').val(currentTarget[1].toFixed(4));
+	$('#targetR').val(currentHeading.toFixed(2));
+	$('#dis').val((parseInt(dist)/1000).toFixed(2));
 	
 }
 
@@ -800,6 +810,15 @@ function startPlane(){
 	if(reportObj)clearInterval(reportObj);
 	reportObj= setInterval("reportPos()",1000);
 }
+function togglePlane(){
+	if(plane.isMove()){
+		stopPlane();
+		$('#startBtn').val('继续');
+	}else{
+		startPlane();
+		$('#startBtn').val('暂停');
+	}
+}
 
 function stopPlane(){
 	gasButtonDown = false;
@@ -842,6 +861,12 @@ function changeSpeed(v){
 	if(vel_limit<=100) {vel_limit=100;}
 	
 }
+
+function changeSpeedMagnification(v){
+	vel_magnification = v;
+	$('#vel_mag').html("x"+v);
+}
+
 
 
 

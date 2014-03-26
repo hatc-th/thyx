@@ -9,7 +9,7 @@ window.global = null;
 
 function runGlobal(){
 	if(window.global){ //退出仿真，清理环境
-		stopPlane();
+		if(plane)stopPlane();
 		window.global.hide();
 		window.ge =null;
 		window.global = null;
@@ -119,7 +119,7 @@ Global.prototype.init = function() {
 		me.ge.getLayerRoot().enableLayerById(me.ge.LAYER_TERRAIN, true);
 		me.ge.getOptions().setTerrainExaggeration(1.0);//2.0
 		
-		me.ge.getOptions().setStatusBarVisibility(true); //显示状态栏 
+		//me.ge.getOptions().setStatusBarVisibility(true); //显示状态栏 
 		me.ge.getOptions().setFlyToSpeed(me.ge.SPEED_TELEPORT);
 		me.ge.getOptions().setFlyToSpeed(100);  // don't filter camera motion
 		me.plane = new Plane();
@@ -390,7 +390,7 @@ Global.prototype.cameraOnboard=function(){
 		 lo.getAltitude()+10 /* altitude */,
 		 me.ge.ALTITUDE_ABSOLUTE,
 		 plane.model.getOrientation().getHeading() ,
-         80, /* tilt */
+         85, /* tilt */
          0 /* range */
          );
 	me.ge.getView().setAbstractView(la);
@@ -460,358 +460,563 @@ function ElevationChart (){
 	
 	me.img = new Image();
 	me.img.src = basePath +'earthview/resource/plane_icon.png';
-}
-
-
-ElevationChart.prototype.draw = function(){
-	var me = this;
-	me.ptos = [];
-	me.elevationDataArray =[]; 
-	me.flightDataArray =[]; 	
-	me.pointsDataArray = [];
-	me.pointsTicks = [];
-	current_sample_index=0;
-	getLinePoints();
-	if(linePoints.length>1){
-		me.elevation();
-	}
 	
-	me.virtual_point_distance = -1;
-	me.virtual_point_num = -1;
-};
-
+	me.needAccuracy=false;
+	me.accuracyReady= false;
+	
+	me.accuracyIndexArray=[];//垂线端点坐标集合
+	me.accuracyCount =0;
+	me.accuracyCalled = false;
+	me.adapter =null;
+	if(API_MODE=='google'){//call google Map API
+		me.adapter  = new GoogleElevationAdapter();
+	}else { //call Arcgis API
+		me.adapter  = new ArcgisElavationAdapter();
+	}
+}
 
 //------------------- Google Maps API------------------
-var SAMPLE_COUNT = 256; //路径采样密度
-//var mLength = 10 ; // 路径宽度采样点密度
-//var mPoints = new Array()[mLength+1][SAMPLE_COUNT]; //采样点矩阵
-ElevationChart.prototype.elevation=function (){
-	var me = this;
-	var elevator = new google.maps.ElevationService();
-	
-	var gPoint = null; //google.maps.LatLng
-	var path = [];
-	var dist = 0;
-	dojo.forEach(linePoints, function(pt,i){
-	    gPoint = new google.maps.LatLng(pt[0],pt[1]);
-	    path[i]=gPoint ; 
-	  });
-	
-	var pathRequest = {
-			'path': path,
-			'samples': SAMPLE_COUNT
-	};
-	// Initiate the path request.
-	elevator.getElevationAlongPath(pathRequest, elevationPathCallback);
-	
-	var locationsRequest = {
-			'locations': path
-	};
-	// Initiate the locations request.
-	elevator.getElevationForLocations(locationsRequest,elevationLocationsCallback);
-}
+var SAMPLE_COUNT = 100; //路径采样密度
+var API_MODE = 'arcgis'; //'arcgis','google'
+var ACCURACY_SAMPLE_COUNT = 20; //路径采样密度
 
-function elevationPathCallback (results, status){
-	if (status == google.maps.ElevationStatus.OK) {
-		var distance = 0;
-		var distance_unit = -1;
-		ec.virtual_point_distance = -1;
-		ec.virtual_point_num = -1;
-		var start_ap_ev=results[0].elevation;
-		var end_ap_ev=results[results.length-1].elevation;
-  	    for (var i=0; i<results.length ; i++) {
-  	    	var pto = new Object();
-  	    	//pto.distance =  redondear((distance * i)/(1000 * (SAMPLE_COUNT - 1)));
-  	    	if(i > 0 ){
-  	    		distance+= getDistance(results[i-1].location.lat(), results[i-1].location.lng(), 
-  	    				results[i].location.lat(), results[i].location.lng() );
-  	    		if(distance_unit < 0){
-  	    			distance_unit=distance;
-  	    		}
-  	    	}
-  	    	pto.distance = distance ;
-  	    	pto.location = results[i].location;
-  	    	pto.elevation = results[i].elevation;
-  	    	ec.ptos[i] = pto;      	    	
-  	    	
-  	    	ec.elevationDataArray[i]=[pto.distance,pto.elevation,results[i].location.lat(),results[i].location.lng()];
-  	    	if(i==0 || i==results.length-1){
-  	    		ec.flightDataArray[i]=ec.elevationDataArray[i];
-  	    	}else if(i + ec.virtual_point_num >= results.length){ //模拟降落 
-  	    		ec.flightDataArray[i]=[pto.distance, FLIGHTHEIGHT - (i + ec.virtual_point_num -results.length +1) * ((FLIGHTHEIGHT- end_ap_ev) / (ec.virtual_point_num - 1)), 
-  	    		                       results[i].location.lat(),results[i].location.lng()];
-  	    	}else if(distance >2000){
-  	    		if(ec.virtual_point_num<0){
-  	    			ec.virtual_point_num = i;
-  	    			ec.virtual_point_distance=distance;
-  	    			for(var n =1; n< ec.virtual_point_num;n++){//从起飞到爬升到航线高度，在机场2000米范围内虚拟 virtual_point_num 个点 ， 模拟起飞
-  	    				ec.flightDataArray[n]=[n * distance_unit, n * ((FLIGHTHEIGHT- start_ap_ev)  / (ec.virtual_point_num - 1)) + start_ap_ev, 
-  	    				                       results[n].location.lat(),results[n].location.lng()];
-  	    			}
-  	    			
-  	    		}
-  	    		ec.flightDataArray[i]=[pto.distance,FLIGHTHEIGHT,results[i].location.lat(),results[i].location.lng()];
-  	    	}
-  	    	
-  	    	if(FLIGHTHEIGHT > 0 && FLIGHTHEIGHT - pto.elevation <= 600) { // 当飞行高度低于最高障碍600米时，报警
-				addAreaSpaceConflictData("rs_ob",FLIGHTHEIGHT - pto.elevation ,{x:results[i].location.lat() ,y:results[i].location.lng() } );
-			}
-  	    	
-  	    }
-  	    
-  	    //mPoints [ 0 ] = elevationDataArray;
-  	    
-  	  //extendPath( ec.elevationDataArray);
-  	    
-  	 }
-	
-	ec.doDraw();
-}
-
-function extendPath(samples){
-	if(global)global.drawRoute();
-	var d1,tempdis1,tempdis2,hdvar,sinvar,cosvar,dx,dy;
-	for (var k = 0; k < samples.length; k++) {
-            
-            if(k ==0){
-            	d1 = (new Date().getTime());
-            	tempdis1 = getDistance(samples[0][2],samples[0][3], samples[0][2],samples[1][3])/1000;//x
+var startTime =0;
+var callCount =0;
+ElevationChart.prototype={
+	draw : function(){
+		var me = this;
+		me.ptos = [];
+		me.elevationDataArray =[]; 
+		me.flightDataArray =[]; 	
+		me.pointsDataArray = [];
+		me.pointsTicks = [];
+		current_sample_index=0;
+		getLinePoints();
+		if(linePoints.length>1){
+			me.elevation();
+		}
+		
+		me.virtual_point_distance = -1;
+		me.virtual_point_num = -1;
+		me.accuracyIndexArray=[];
+		me.accuracyCount =0;
+		me.accuracyCalled = false;
+	},
+	elevation:function (){
+		var me = this;
+		var gPoint = null; //google.maps.LatLng
+		var path = [];
+		var dist = 0;
+		me.needAccuracy=true;
+		me.accuracyReady=false;
+		
+		me.adapter.getElevation();
+	},
+	upgradeElevationAccuracy :function() {
+		var me = this;
+		startTime= new Date().getTime();
+		callCount =0;
+		var samples = me.elevationDataArray;
+		//if(global)global.drawRoute();
+		var d1,tempdis1,tempdis2,hdvar,sinvar,cosvar,dx,dy;
+		for (var k = 0; k < samples.length; k++) {
+	            
+	        if(k ==0){
+	        	d1 = (new Date().getTime());
+	        	tempdis1 = getDistance(samples[0][2],samples[0][3], samples[0][2],samples[1][3])/1000;//x
 			    tempdis2 = getDistance(samples[1][2],samples[1][3], samples[0][2],samples[1][3])/1000;//y
 			   
 				hdvar = Math.atan2(tempdis2,tempdis1);//获取弧度point(x,y) atan2(y,x)
 				if((samples[1][2] > samples[0][2]) && (samples[1][3] < samples[0][3])){
-			    	hdvar = Math.PI - hdvar
+			    	hdvar = Math.PI - hdvar;
 			    }
 			    if((samples[1][2] < samples[0][2]) && (samples[1][3] > samples[0][3])){
-			    	hdvar = Math.PI - hdvar
+			    	hdvar = Math.PI - hdvar;
 			    }
 				sinvar = Math.sin(hdvar);//
 				cosvar = Math.cos(hdvar);//
-            }else{
+	        }else{
 			    tempdis1 = getDistance(samples[k-1][2], samples[k-1][3], samples[k-1][2], samples[k][3])/1000;//x
 			    tempdis2 = getDistance(samples[k][2], samples[k][3], samples[k-1][2], samples[k][3])/1000;//y
 
 				hdvar = Math.atan2(tempdis2,tempdis1);//获取弧度point(x,y) atan2(y,x)
 				if((samples[k][2] > samples[k-1][2]) && (samples[k][3] < samples[k-1][3])){
-			    	hdvar = Math.PI - hdvar
+			    	hdvar = Math.PI - hdvar;
 			    }
 			    if((samples[k][2] < samples[k-1][2]) && (samples[k][3] > samples[k-1][3])){
-			    	hdvar = Math.PI - hdvar
+			    	hdvar = Math.PI - hdvar;
 			    }
 				sinvar = Math.sin(hdvar);//
 				cosvar = Math.cos(hdvar);//
-            }
+	        }
 			
 			//samples[k]
 			var pt = new esri.geometry.Point(samples[k][3], samples[k][2], map.spatialReference);
 			
-			dx = sinvar*10;//经度方向偏移量（单位千米＄1�7
-			dy = cosvar*10;//纬度方向偏移量（单位千米＄1�7
-			var hd = samples[k][2]*Math.PI/180.0;//角度转换为弧庄1�7
-			dx = dx/111.31955*(Math.cos(hd));//经度偏移倄1�7
-			dy = dy/111.31955;//纬度偏移倄1�7
+			dx = sinvar*10;//经度方向偏移量（单位千米）
+			dy = cosvar*10;//纬度方向偏移量（单位千米）
+			var hd = samples[k][2]*Math.PI/180.0;//角度转换为弧度
+			dx = dx/111.31955*(Math.cos(hd));//经度偏移量
+			dy = dy/111.31955;//纬度偏移量
 			var pt1 = pt.offset(-dx,dy);
-			var pt2 = pt.offset(dx,-dy);
-			if(global)global.drawLine(pt1.y,pt1.x,pt2.y,pt2.x);
+			var pt2 = pt.offset(dx,-dy); 
+			//if(global)global.drawLine(pt1.y,pt1.x,pt2.y,pt2.x);
+			me.accuracyIndexArray[k]={x:pt1.x,y:pt1.y};
+			
+			me.adapter.getAccuracy(pt1,pt2);
+			
 			//var myJsonStr = '{"points":' + points + '}';
 			//temppoints = '[['+pt1.x+','+pt1.y+'],['+pt2.x+','+pt2.y+']]';
 			//gis_drawSection2(temppoints,planHeight,samples,k,drawChart);
-		
-	}
-}
-
-function elevationLocationsCallback (results, status){
-	if (status == google.maps.ElevationStatus.OK) {
+			
+		}
+	},
+	transformPathResult:function (_points){
+		//Product : elevationDataArray ,flightDataArray
+		var me = this;
 		var distance = 0;
-  	    for (var i=0; i<results.length ; i++) {
-  	    	var pto = new Object();
-  	    	//pto.distance =  redondear((distance * i)/(1000 * (SAMPLE_COUNT - 1)));
-  	    	if(i > 0 ){
-  	    		distance+= getDistance(results[i-1].location.lat(), results[i-1].location.lng(), 
-  	    				results[i].location.lat(), results[i].location.lng() );
-  	    	}
-  	    	pto.distance = distance ;
-  	    	pto.location = results[i].location;
-  	    	pto.elevation = results[i].elevation;
-  	    	
-  	    	ec.pointsDataArray[i]=[pto.distance,pto.elevation,results[i].location.lat(),results[i].location.lng()];
-  	    	ec.pointsTicks[i]= [pto.distance, linePoints[i][2]];
-  	    	
-  	    }
-  	 }
-	ec.doDraw();
-}
-
-ElevationChart.prototype.getIndexByDist=function(dist){
-	var me = this;
-	
-	if(me.pointsDataArray.length>0){
-		for(var i = 0 ;i<me.pointsDataArray.length;i++){
-			if( dist < ec.pointsDataArray[i][0] ){
-				return i>1? i: 1;
+		var distance_unit = -1;//采样点间距
+		me.virtual_point_distance = -1;
+		me.virtual_point_num = -1;
+		var start_ap_ev=_points[0].elevation;
+		var end_ap_ev=_points[_points.length-1].elevation;
+	    for (var i=0; i<_points.length ; i++) {
+	    	var pto = new Object();
+	    	var curPt= _points[i];
+	    	
+	    	//pto.distance =  redondear((distance * i)/(1000 * (SAMPLE_COUNT - 1)));
+	    	if(i > 0 ){
+	    		distance+= getDistance(_points[i-1].lat, _points[i-1].lon,curPt.lat, curPt.lon );
+	    		if(distance_unit < 0){
+	    			distance_unit=distance;
+	    		}
+	    	}
+	    	pto.distance = distance ;
+	    	//pto.location = results[i].location;
+	    	pto.elevation = curPt.elevation;
+	    	//me.ptos[i] = pto;      	    	
+	    	
+	    	me.elevationDataArray[i]=[pto.distance,pto.elevation,curPt.lat,curPt.lon];
+	    	if(i==0 || i==_points.length-1){
+	    		me.flightDataArray[i]=me.elevationDataArray[i];
+	    	}else if(i + me.virtual_point_num >= _points.length){ //模拟降落 
+	    		me.flightDataArray[i]=[pto.distance, 
+	    		                       FLIGHTHEIGHT - (i + me.virtual_point_num -_points.length +1) * ((FLIGHTHEIGHT- end_ap_ev) / (me.virtual_point_num - 1)), 
+	    		                       curPt.lat,curPt.lon];
+	    	}else if(distance >2000){
+	    		if(me.virtual_point_num<0){
+	    			me.virtual_point_num = i;
+	    			me.virtual_point_distance=distance;
+	    			for(var n =1; n< me.virtual_point_num;n++){//从起飞到爬升到航线高度，在机场2000米范围内虚拟 virtual_point_num 个点 ， 模拟起飞
+	    				me.flightDataArray[n]=[n * distance_unit, n * ((FLIGHTHEIGHT- start_ap_ev)  / (me.virtual_point_num - 1)) + start_ap_ev, 
+	    				                       _points[n].lat,_points[n].lon];
+	    			}
+	    			
+	    		}
+	    		me.flightDataArray[i]=[pto.distance,FLIGHTHEIGHT,curPt.lat,curPt.lon];
+	    	}
+	    	
+	    	if(FLIGHTHEIGHT > 0 && FLIGHTHEIGHT - pto.elevation <= 600) { // 当飞行高度低于最高障碍600米时，报警
+	    		addAreaSpaceConflictData("rs_ob",FLIGHTHEIGHT - pto.elevation ,{x:curPt.lat ,y: curPt.lon } );
+	    	}
+	    }
+	},
+	transformPointsResult:function (_points){
+		//Product : pointsDataArray , pointsTicks 
+		var distance = 0;
+		for (var i=0; i<_points.length ; i++) {
+		  	var pto = new Object();
+		  	var curPt= _points[i];
+		  	if(i > 0 ){
+		  		distance+= getDistance(_points[i-1].lat, _points[i-1].lon, curPt.lat, curPt.lon );
+		  	}
+		  	pto.distance = distance ;
+		  	pto.elevation = curPt.elevation;
+		  	
+		  	ec.pointsDataArray[i]=[pto.distance,pto.elevation,curPt.lat, curPt.lon];
+		  	ec.pointsTicks[i]= [pto.distance, linePoints[i][2]];
+		}
+	},
+	transformAccuracyResult:function (_points){
+		//Product : elevationDataArray with high accuracy
+		var me = this;
+		for(var i=0;i<ec.accuracyIndexArray.length;i++){
+			if(me.adapter.pointEqual(_points[0],ec.accuracyIndexArray[i])){
+				var max = 0;
+				for (var j =0 ;j<_points.length ;j++){
+					if(max <  _points[j].elevation ){
+						max =  _points[j].elevation ;
+					}
+				}
+				ec.accuracyCount ++ ;
+				ec.elevationDataArray[i][1] = max;
 			}
 		}
-	}else{
-		return 1;
+		if(ec.accuracyCount == ec.elevationDataArray.length){
+			ec.accuracyReady=true;
+			ec.doDraw();
+			console.log("accuracy spend time : "+ (new Date().getTime() - startTime) +" ms , samples count ：" + SAMPLE_COUNT);
+		}
+	},
+
+	getIndexByDist:function(dist){
+		var me = this;
+		
+		if(me.pointsDataArray.length>0){
+			for(var i = 0 ;i<me.pointsDataArray.length;i++){
+				if( dist < ec.pointsDataArray[i][0] ){
+					return i>1? i: 1;
+				}
+			}
+		}else{
+			return 1;
+		}
+	},
+
+	doDraw :function (){
+		var me = this;
+		if(me.pointsDataArray.length==0 || me.elevationDataArray.length ==0 ){
+			return;//由于异步调用，数据缺失，不进行绘制
+		}
+		if(me.accuracyCalled && !me.accuracyReady) {
+			return; //精确数据未准备好
+		}
+		if(me.needAccuracy && !me.accuracyCalled){
+			me.upgradeElevationAccuracy();
+			me.accuracyCalled=true;
+		}
+		
+		document.getElementById('chartNode').style.display='block';
+		me.myPlot = $.plot($('#chartNode'), 
+				[ {label : '高程', data: me.elevationDataArray, hoverable: true, lines: { fill: 0.9 }, color:"rgba(240,190,77,0.9)"  }
+				  ,{label : '航线', data: me.flightDataArray, hoverable: true  , xaxis: 1,color: "rgba(63,156,233,0.9)"}
+				  ,{data:me.pointsDataArray,points:  { show:true , symbol: "diamond" ,radius: 5 },xaxis: 2 ,color : "rgba(235,67,67,0.9)"}
+				],
+				{	//crosshair: {mode: 'x'},
+					grid: {hoverable: true,clickable: true,backgroundColor : {colors : ["rgba(137,203,235,1)", "rgba(182,237,243,1)"]} }
+					,
+					xaxes : [{tickFormatter: function (val, axis) { return val/1000;},font: {weight: "bold",color: "rgba(255,255,255,1)"},labelHeight: 10},
+					         {font: {color: "rgba(255,255,255,1)"}, ticks : me.pointsTicks,labelHeight: 10 }]
+					,yaxis :{font: {weight: "bold",color: "rgba(255,255,255,1)"}}
+					,legend: { show:false,noColumns : 2}
+				});
+		$("<div id='tooltipEC'></div>").css({
+			position: "absolute",
+			display: "none",
+			border: "1px solid #fdd",
+			padding: "2px",
+			"background-color": "#fee",
+			"white-space": "nowrap",
+			opacity: 0.80
+		}).appendTo("body");
+		
+		
+		$("#chartNode").bind("plothover", function (event, pos, item) {
+		    // axis coordinates for other axes, if present, are in pos.x2, pos.x3, ...
+		    // if you need global screen coordinates, they are pos.pageX, pos.pageY
+
+			if (item) {
+				if(item.seriesIndex==2){
+					$("#tooltipEC").html(linePoints[item.dataIndex][2]+"</br>" 
+							+ "海拔："+ me.pointsDataArray[item.dataIndex][1].toFixed(0) +" m</br>" 
+							+ "里程："+ (me.pointsDataArray[item.dataIndex][0]/1000).toFixed(1) +" km</br>")
+					.css({top: item.pageY-50, left: item.pageX+15+$("#tooltipEC").width() > $(window).width() ? $(window).width()-$("#tooltipEC").width()- 10 : item.pageX+5})
+					.fadeIn(200);
+				};
+				if(item.seriesIndex==0){
+					$("#tooltipEC").html("海拔："+ me.elevationDataArray[item.dataIndex][1].toFixed(0) +" m</br>" 
+							+ "里程："+ (me.elevationDataArray[item.dataIndex][0]/1000).toFixed(1) +" km</br>")
+					.css({top: item.pageY-36, left: item.pageX+15+$("#tooltipEC").width() > $(window).width() ? $(window).width()-$("#tooltipEC").width()- 10 : item.pageX+5})
+					.fadeIn(200);
+				};
+			} else {
+				$("#tooltipEC").hide();
+			}
+		});
+		
+		$("#chartNode").bind("plotclick", function (event, pos, item) {
+			
+		    if (item) {
+		    	me.myPlot.unhighlight();
+		    	me.myPlot.highlight(item.series, item.datapoint);
+		    	current_sample_index= item.dataIndex;
+		    	var dataArray = item.series.data;
+		        lastPos= [dataArray[item.dataIndex][2], dataArray[item.dataIndex][3],FLIGHTHEIGHT];
+		        global.drawFlyRoute(lastPos);
+		        cc.jumpTo(dataArray[item.dataIndex][2], dataArray[item.dataIndex][3],dataArray[item.dataIndex][0]);
+		    }
+		});
+		me.redraw();
+		me.markPlane(current_sample_index);
+		me.drawCloud();
+		
+	},
+
+	drawCloud:function (){
+		var me=this;
+		
+		if(me.elevationDataArray.length == 0  ) return;
+		var canvas = me.myPlot.getCanvas();
+		var ctx = canvas.getContext("2d");
+		//start 
+		var x = me.myPlot.pointOffset({ x: me.virtual_point_distance,  y: 1500 }).left;
+		var y = me.myPlot.pointOffset({ x: me.virtual_point_distance,  y: 1500 }).top;
+		var x0 = me.myPlot.pointOffset({x:0,y:0}).left;
+		//云
+		ctx.fillStyle="#ffffff";
+		ctx.fillRect(x0 , y ,x -x0 ,5);
+
+		var start_airport_pos = me.myPlot.pointOffset({x:me.elevationDataArray[0][0],y:me.elevationDataArray[0][1]});
+		ctx.fillStyle="rgba(75,247,111,0.8)";
+		ctx.beginPath();
+		ctx.moveTo(start_airport_pos.left,start_airport_pos.top - 10);
+		ctx.lineTo(start_airport_pos.left,start_airport_pos.top - 20);
+		ctx.arc(start_airport_pos.left, start_airport_pos.top , 20, Math.PI * 1.5, Math.PI * 2 ,  false);
+		ctx.lineTo(start_airport_pos.left + 10 ,start_airport_pos.top );
+		ctx.arc(start_airport_pos.left, start_airport_pos.top , 10, 0, Math.PI * 1.5 ,  true );
+		ctx.closePath();
+		ctx.fill();
+		
+		//end 
+		var xe = me.myPlot.pointOffset({x:ec.elevationDataArray[ec.elevationDataArray.length-1][0],y:0}).left;
+		var ye = me.myPlot.pointOffset({x:0,y:1200}).top;
+		ctx.fillStyle="#ffffff";
+		ctx.fillRect(xe - (x -x0) , ye ,x -x0 ,5);
+		
+		var end_airport_pos = me.myPlot.pointOffset({x:me.elevationDataArray[ec.elevationDataArray.length-1][0],y:me.elevationDataArray[ec.elevationDataArray.length-1][1]});
+		ctx.fillStyle="rgba(251,79,79,0.8)";
+		ctx.beginPath();
+		ctx.moveTo(end_airport_pos.left,end_airport_pos.top - 10);
+		ctx.lineTo(end_airport_pos.left,end_airport_pos.top - 20);
+		ctx.arc(end_airport_pos.left, end_airport_pos.top , 20, Math.PI * 1.5, Math.PI  ,  true);
+		ctx.lineTo(end_airport_pos.left - 10 ,end_airport_pos.top );
+		ctx.arc(end_airport_pos.left, end_airport_pos.top , 10, Math.PI , Math.PI * 1.5 ,  false );
+		ctx.closePath();
+		ctx.fill();
+	},
+
+	redraw:function (){
+		var me = this;
+		me.myPlot.draw();
+		me.drawRightBottomLabel();
+		me.drawCloud();
+	},
+
+	drawRightBottomLabel: function (){
+		return ;
+		var me = this;
+		var canvas = me.myPlot.getCanvas();
+		var ctx = canvas.getContext("2d");
+		ctx.globalAlpha=1;
+		ctx.globalCompositeOperation="source-over";
+		ctx.fillStyle="#ffffff";
+		ctx.fillRect(canvas.width-40, canvas.height-16,40,16);
+		ctx.fillStyle="#000000";
+		ctx.fillText(Math.round(distance/1000,1)+'km', canvas.width-32, canvas.height-4);
+	},
+
+	markPlane:function (_i){
+		var me = this;
+		
+		if(me.flightDataArray.length==0)return;
+		var canvas = me.myPlot.getCanvas();
+		var ctx = canvas.getContext("2d");
+		
+		var pos = me.myPlot.pointOffset({ x: me.flightDataArray[_i][0], y: me.flightDataArray[_i][1] });
+		ctx.drawImage(me.img,pos.left-8,pos.top-8);
+		current_sample_index=_i;
+	},
+
+	markTarget :  function(_i){
+		var me = this;
+		me.myPlot.unhighlight();
+		me.myPlot.highlight(2, _i);
+		
+		var pageX = me.myPlot.pointOffset({x:me.pointsDataArray[_i][0],y:me.pointsDataArray[_i][1]}).left+$("#chartNode").offset().left;
+		var pageY = me.myPlot.pointOffset({x:me.pointsDataArray[_i][0],y:me.pointsDataArray[_i][1]}).top+$("#chartNode").offset().top;
+		$("#tooltipEC").hide();
+		$("#tooltipEC").html("目标："+linePoints[_i][2]+"</br>" 
+				+ "海拔："+ me.pointsDataArray[_i][1].toFixed(0) +" m</br>" 
+				+ "里程："+ (me.pointsDataArray[_i][0]/1000).toFixed(1) +" km</br>")
+		.css({top: pageY-50, left: pageX+15+$("#tooltipEC").width() > $(window).width() ? $(window).width()-$("#tooltipEC").width()- 10 : pageX+5})
+		.fadeIn(200);
 	}
 };
 
-ElevationChart.prototype.doDraw =function (){
-	var me = this;
-	document.getElementById('chartNode').style.display='block';
-	me.myPlot = $.plot($('#chartNode'), 
-			[ {label : '高程', data: me.elevationDataArray, hoverable: true, lines: { fill: 0.9 }, color:"rgba(240,190,77,0.9)"  }
-			  ,{label : '航线', data: me.flightDataArray, hoverable: true  , xaxis: 1,color: "rgba(63,156,233,0.9)"}
-			  ,{data:me.pointsDataArray,points:  { show:true , symbol: "diamond" ,radius: 5 },xaxis: 2 ,color : "rgba(235,67,67,0.9)"}
-			],
-			{	//crosshair: {mode: 'x'},
-				grid: {hoverable: true,clickable: true,backgroundColor : {colors : ["rgba(137,203,235,1)", "rgba(182,237,243,1)"]} }
-				,
-				xaxes : [{tickFormatter: function (val, axis) { return val/1000;},font: {weight: "bold",color: "rgba(255,255,255,1)"},labelHeight: 10},
-				         {font: {color: "rgba(255,255,255,1)"}, ticks : me.pointsTicks,labelHeight: 10 }]
-				,yaxis :{font: {weight: "bold",color: "rgba(255,255,255,1)"}}
-				,legend: { show:false,noColumns : 2}
-			});
-	$("<div id='tooltipEC'></div>").css({
-		position: "absolute",
-		display: "none",
-		border: "1px solid #fdd",
-		padding: "2px",
-		"background-color": "#fee",
-		"white-space": "nowrap",
-		opacity: 0.80
-	}).appendTo("body");
-	
-	
-	$("#chartNode").bind("plothover", function (event, pos, item) {
-	    // axis coordinates for other axes, if present, are in pos.x2, pos.x3, ...
-	    // if you need global screen coordinates, they are pos.pageX, pos.pageY
 
-		if (item) {
-			if(item.seriesIndex==2){
-				$("#tooltipEC").html(linePoints[item.dataIndex][2]+"</br>" 
-						+ "海拔："+ me.pointsDataArray[item.dataIndex][1].toFixed(0) +" m</br>" 
-						+ "里程："+ (me.pointsDataArray[item.dataIndex][0]/1000).toFixed(1) +" km</br>")
-				.css({top: item.pageY-50, left: item.pageX+15+$("#tooltipEC").width() > $(window).width() ? $(window).width()-$("#tooltipEC").width()- 10 : item.pageX+5})
-				.fadeIn(200);
-			};
-			if(item.seriesIndex==0){
-				$("#tooltipEC").html("海拔："+ me.elevationDataArray[item.dataIndex][1].toFixed(0) +" m</br>" 
-						+ "里程："+ (me.elevationDataArray[item.dataIndex][0]/1000).toFixed(1) +" km</br>")
-				.css({top: item.pageY-36, left: item.pageX+15+$("#tooltipEC").width() > $(window).width() ? $(window).width()-$("#tooltipEC").width()- 10 : item.pageX+5})
-				.fadeIn(200);
-			};
-		} else {
-			$("#tooltipEC").hide();
-		}
-	});
-	
-	$("#chartNode").bind("plotclick", function (event, pos, item) {
-		
-	    if (item) {
-	    	me.myPlot.unhighlight();
-	    	me.myPlot.highlight(item.series, item.datapoint);
-	    	current_sample_index= item.dataIndex;
-	    	var dataArray = item.series.data;
-	        lastPos= [dataArray[item.dataIndex][2], dataArray[item.dataIndex][3],FLIGHTHEIGHT];
-	        global.drawFlyRoute(lastPos);
-	        cc.jumpTo(dataArray[item.dataIndex][2], dataArray[item.dataIndex][3],dataArray[item.dataIndex][0]);
-	    }
-	});
-	me.redraw();
-	me.markPlane(current_sample_index);
-	me.drawCloud();
-};
-
-ElevationChart.prototype.drawCloud=function (){
+function ArcgisElavationAdapter () {
 	var me=this;
-	
-	if(me.elevationDataArray.length == 0  ) return;
-	var canvas = me.myPlot.getCanvas();
-	var ctx = canvas.getContext("2d");
-	//start 
-	var x = me.myPlot.pointOffset({ x: me.virtual_point_distance,  y: 1500 }).left;
-	var y = me.myPlot.pointOffset({ x: me.virtual_point_distance,  y: 1500 }).top;
-	var x0 = me.myPlot.pointOffset({x:0,y:0}).left;
-	//云
-	ctx.fillStyle="#ffffff";
-	ctx.fillRect(x0 , y ,x -x0 ,5);
-
-	var start_airport_pos = me.myPlot.pointOffset({x:me.elevationDataArray[0][0],y:me.elevationDataArray[0][1]});
-	ctx.fillStyle="rgba(75,247,111,0.8)";
-	ctx.beginPath();
-	ctx.moveTo(start_airport_pos.left,start_airport_pos.top - 10);
-	ctx.lineTo(start_airport_pos.left,start_airport_pos.top - 20);
-	ctx.arc(start_airport_pos.left, start_airport_pos.top , 20, Math.PI * 1.5, Math.PI * 2 ,  false);
-	ctx.lineTo(start_airport_pos.left + 10 ,start_airport_pos.top );
-	ctx.arc(start_airport_pos.left, start_airport_pos.top , 10, 0, Math.PI * 1.5 ,  true );
-	ctx.closePath();
-	ctx.fill();
-	
-	//end 
-	var xe = me.myPlot.pointOffset({x:ec.elevationDataArray[ec.elevationDataArray.length-1][0],y:0}).left;
-	var ye = me.myPlot.pointOffset({x:0,y:1200}).top;
-	ctx.fillStyle="#ffffff";
-	ctx.fillRect(xe - (x -x0) , ye ,x -x0 ,5);
-	
-	var end_airport_pos = me.myPlot.pointOffset({x:me.elevationDataArray[ec.elevationDataArray.length-1][0],y:me.elevationDataArray[ec.elevationDataArray.length-1][1]});
-	ctx.fillStyle="rgba(251,79,79,0.8)";
-	ctx.beginPath();
-	ctx.moveTo(end_airport_pos.left,end_airport_pos.top - 10);
-	ctx.lineTo(end_airport_pos.left,end_airport_pos.top - 20);
-	ctx.arc(end_airport_pos.left, end_airport_pos.top , 20, Math.PI * 1.5, Math.PI  ,  true);
-	ctx.lineTo(end_airport_pos.left - 10 ,end_airport_pos.top );
-	ctx.arc(end_airport_pos.left, end_airport_pos.top , 10, Math.PI , Math.PI * 1.5 ,  false );
-	ctx.closePath();
-	ctx.fill();
-};
-
-ElevationChart.prototype.redraw=function (){
-	var me = this;
-	me.myPlot.draw();
-	me.drawRightBottomLabel();
-	me.drawCloud();
-};
-
-ElevationChart.prototype.drawRightBottomLabel= function (){
-	return ;
-	var me = this;
-	var canvas = me.myPlot.getCanvas();
-	var ctx = canvas.getContext("2d");
-	ctx.globalAlpha=1;
-	ctx.globalCompositeOperation="source-over";
-	ctx.fillStyle="#ffffff";
-	ctx.fillRect(canvas.width-40, canvas.height-16,40,16);
-	ctx.fillStyle="#000000";
-	ctx.fillText(Math.round(distance/1000,1)+'km', canvas.width-32, canvas.height-4);
-};
-
-ElevationChart.prototype.markPlane=function (_i){
-	var me = this;
-	
-	if(me.flightDataArray.length==0)return;
-	var canvas = me.myPlot.getCanvas();
-	var ctx = canvas.getContext("2d");
-	
-	var pos = me.myPlot.pointOffset({ x: me.flightDataArray[_i][0], y: me.flightDataArray[_i][1] });
-	ctx.drawImage(me.img,pos.left-8,pos.top-8);
-	current_sample_index=_i;
-};
-
-ElevationChart.prototype.markTarget =  function(_i){
-	var me = this;
-	me.myPlot.unhighlight();
-	me.myPlot.highlight(2, _i);
-	
-	var pageX = me.myPlot.pointOffset({x:me.pointsDataArray[_i][0],y:me.pointsDataArray[_i][1]}).left+$("#chartNode").offset().left;
-	var pageY = me.myPlot.pointOffset({x:me.pointsDataArray[_i][0],y:me.pointsDataArray[_i][1]}).top+$("#chartNode").offset().top;
-	$("#tooltipEC").hide();
-	$("#tooltipEC").html("目标："+linePoints[_i][2]+"</br>" 
-			+ "海拔："+ me.pointsDataArray[_i][1].toFixed(0) +" m</br>" 
-			+ "里程："+ (me.pointsDataArray[_i][0]/1000).toFixed(1) +" km</br>")
-	.css({top: pageY-50, left: pageX+15+$("#tooltipEC").width() > $(window).width() ? $(window).width()-$("#tooltipEC").width()- 10 : pageX+5})
-	.fadeIn(200);
+	me.points = [];
 }
+		
+ArcgisElavationAdapter.prototype={
+	getElevation:function (){
+		var me = this;
+		var path=[];
+		dojo.forEach(linePoints, function(pt,i){
+		    path[i]=[pt[1],pt[0]] ; 
+		});
+		
+		var multipoint = new esri.geometry.Multipoint({"points":path});
+		polyline = new esri.geometry.Polyline(map.spatialReference);
+		polyline.addPath(multipoint.points);
+		// Initiate the path request.
+		var layersRequest = esri.request({
+			url : layerUrl + "/getSamples",
+			content : {
+				geometry : JSON.stringify(polyline.toJson())
+				,geometryType : samplegeometryType
+				,sampleCount : SAMPLE_COUNT
+				//,returnFirstValueOnly : true
+				,f : "json"
+			},
+			handleAs : "json",
+			callbackParamName : "callback"
+		});
+		layersRequest.then(me.elevationPathCallback, me.errorbackfunc);
+		// Initiate the locations request.
+		var layersRequest = esri.request({
+			url : layerUrl + "/getSamples",
+			content : {
+				geometry : JSON.stringify({points:multipoint.points})
+				,geometryType : "esriGeometryMultipoint"
+				//,returnFirstValueOnly : true
+				,f : "json"
+			},
+			handleAs : "json",
+			callbackParamName : "callback"
+		});
+		layersRequest.then(me.elevationLocationsCallback, me.errorbackfunc);
+	},
+	getAccuracy:function(pt1,pt2){
+		var me = this;
+		var multipoint = new esri.geometry.Multipoint({"points":[[pt1.x,pt1.y],[pt2.x,pt2.y]]});
+		var polyline = new esri.geometry.Polyline(map.spatialReference);
+		polyline.addPath(multipoint.points);
+		// Initiate the path request.
+		var layersRequest = esri.request({
+			url : layerUrl + "/getSamples",
+			content : {
+				geometry : JSON.stringify(polyline.toJson())
+				,geometryType : samplegeometryType
+				,sampleCount : ACCURACY_SAMPLE_COUNT
+				//,returnFirstValueOnly : true
+				,f : "json"
+			},
+			handleAs : "json",
+			callbackParamName : "callback"
+		});
+		layersRequest.then(me.accuracyCallBack, me.errorbackfunc);
+	},
+	parsePoints:function(samples){
+		var me = this;
+		me.points=[];
+		for(var i=0;i<samples.length;i++){
+			var sample = samples[i];
+			me.points[i]= {lat:sample.location.y,lon:sample.location.x,elevation:parseFloat(sample.value)};
+		}
+		return me.points;
+	},
+		
+	elevationPathCallback:function(response) {
+		var me = this;
+		if (response.samples && response.samples.length > 0){
+			ec.transformPathResult(ec.adapter.parsePoints(response.samples));
+		}
+		ec.doDraw();
+	},
+	errorbackfunc:function(error) {
+		console.log(error.message);
+	},
+	elevationLocationsCallback:function  (response){
+		if (response.samples && response.samples.length > 0){
+			ec.transformPointsResult(ec.adapter.parsePoints(response.samples));
+	  	}
+		ec.doDraw();
+	},
+	accuracyCallBack:function (response){
+		if (response.samples && response.samples.length > 0){
+			ec.transformAccuracyResult(ec.adapter.parsePoints(response.samples));
+		}
+		
+	},
+	pointEqual:function (point1 ,point2){
+		return point1.lon == point2.x && point1.lat == point2.y ;
+	}
+};
+
+
+function GoogleElevationAdapter () {
+	var me=this;
+	me.points = [];
+	me.elevator = new google.maps.ElevationService();
+}
+	
+GoogleElevationAdapter.prototype = {
+	getElevation:function (){
+		var me = this;
+		var path=[];
+		dojo.forEach(linePoints, function(pt,i){
+		    gPoint = new google.maps.LatLng(pt[0],pt[1]);
+		    path[i]=gPoint ; 
+		});
+		
+		var pathRequest = {
+				'path': path,
+				'samples': SAMPLE_COUNT
+		};
+		// Initiate the path request.
+		me.elevator.getElevationAlongPath(pathRequest, me.elevationPathCallback);
+		
+		var locationsRequest = {
+				'locations': path
+		};
+		// Initiate the locations request.
+		me.elevator.getElevationForLocations(locationsRequest,me.elevationLocationsCallback);
+	},
+	getAccuracy:function(pt1,pt2){
+		var me = this;
+		var pathRequest = {
+				'path': [new google.maps.LatLng(pt1.y,pt1.x),new google.maps.LatLng(pt2.y,pt2.x)],
+				'samples': ACCURACY_SAMPLE_COUNT
+		};
+		// Initiate the path request.
+		me.elevator.getElevationAlongPath(pathRequest, me.accuracyCallBack );
+		//console.log("callCount" + callCount ++ );
+	},
+	parsePoints:function(results){
+		var me = this;
+		me.points=[];
+		for(var i=0;i<results.length;i++){
+			var result = results[i];
+			me.points[i]= {lat:result.location.lat(),lon:result.location.lng(),elevation:result.elevation};
+		}
+	},
+	elevationPathCallback :function  (results, status){
+		var me = this;
+		if (status == google.maps.ElevationStatus.OK) {
+			ec.transformPathResult(ec.adapter.parsePoints(results));
+	  	}
+		ec.doDraw();
+	},
+	elevationLocationsCallback:function  (results, status){
+		var me = this;
+		if (status == google.maps.ElevationStatus.OK) {
+			ec.transformPointsResult(ec.adapter.parsePoints(results));
+	  	}
+		ec.doDraw();
+	},
+	accuracyCallBack:function (results, status){
+		var me = this;
+		if (status == google.maps.ElevationStatus.OK) {
+			ec.transformAccuracyResult(ec.adapter.parsePoints(results));
+		}
+	},
+	pointEqual:function (point1 ,point2){
+		return Math.abs( point1.lon - point2.x ) <0.00001 && Math.abs(point1.lat - point2.y)<0.00001;
+	}
+};
+
 //--------------------------ControlCenter ---------------//
 //页面控制调度
 function ControlCenter(){
@@ -827,6 +1032,7 @@ ControlCenter.prototype.globalInit=function(){
 	current_sample_index=0;
 	
 	$("#map3dControl input[type='input']").val(0);
+	$("#startBtn").val("暂停");
 };
 
 
@@ -871,6 +1077,7 @@ ControlCenter.prototype.targetChange = function(_i){
 	global.removeTargets();
 	global.drawTarget();
 	ec.markTarget(_i);
+	$('#targetHeight').val(ec.pointsDataArray[_i][1].toFixed(0));
 };
 
 ControlCenter.prototype.planeStart = function(){

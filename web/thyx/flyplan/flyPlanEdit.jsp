@@ -33,8 +33,7 @@ String basePath = request.getScheme()+"://"+request.getServerName()+":"+request.
 <script type='text/javascript' src='<%=path %>/ad/jqueryPlus/autocomplete/js/jquery.autocomplete.js'></script><base>
 <!-- 地图操作需要引入的文件 -->
 <%@include file = "/gis/gis.inc"%>
-<!-- 三维模拟需要引入的文件 -->
-<%@include file = "/earthview/glb.inc"%>
+
 
 <script type="text/javascript">
 $(document).ready(function() {
@@ -1000,9 +999,8 @@ function clearGraphicInfoByCode() {
 		<div class="buttonArea">
 			<input class="buttonArea1" id="saveBut" type="button" value="  保 存" onClick="ajaxSaveFlyPlan('11');"/>&nbsp;&nbsp;
 			<input class="buttonArea2" id="commitBut"  type="button" value="  提 交" onClick="ajaxSaveFlyPlan('12');" />&nbsp;&nbsp;
-			<input class="buttonArea3" type="button" value="  返 回" onClick="goBack();"/>
-			
-			<input class="buttonArea3" type="button" value="  仿真" onClick="runGlobal();"/>
+			<input class="buttonArea3" type="button" value="  返 回" onClick="goBack();"/>&nbsp;&nbsp;
+			<input class="buttonArea3" type="button" value="  仿真" onClick="runGlobal();"/>&nbsp;&nbsp;
 			<input class="buttonArea3" type="button" value="  高程" onclick="drawElevation();" />
 		</div>
 	</div>
@@ -1013,40 +1011,46 @@ function clearGraphicInfoByCode() {
 <div id='map3dControl' class="bottomButtonArea" style="height: 20% ;width:100% ;float: left ;display:none;text-align: left;" >
 		
 		<span style="color: #FFFFFF" >速度</span><input type="input" style="width:60px;" value="0" id="vel"  readonly /><span style="color: #FFFFFF" >km/h</span>
-		<input type="button" value="加速" onclick="changeSpeed(100);" />
-		<input type="button" value="减速" onclick="changeSpeed(-100);" />
+		<span style="color: #FFFFFF" id="vel_mag">x1</span>
+		<input type="button" value="x1" onclick="changeSpeedMagnification(1);" />
+		<input type="button" value="x2" onclick="changeSpeedMagnification(2);" />
+		<input type="button" value="x4" onclick="changeSpeedMagnification(4);" />
+		<input type="button" value="x8" onclick="changeSpeedMagnification(8);" />
 		<input type="button" value="舱内视角" onclick="global.addPanel();global.cameraOnboard();" />
 		<input type="button" value="舱外视角" onclick="global.removePanel();global.cameraBack();" />
 		<input type="button" value="右侧视角" onclick="global.removePanel();global.cameraRight();" />
 		<input type="button" value="左侧视角" onclick="global.removePanel();global.cameraLeft();" />
 		<br/>
-		
-		<span style="color: #FFFFFF" >航程</span><input type="input" style="width:50px;" value="0" id="distance"  readonly />
-		<span style="color: #FFFFFF" >高度</span><input type="input" style="width:50px;" value="0" id="height"  readonly />
-		
-		<span style="color: #FFFFFF" >目标点：</span><input type="input" style="width:50px;" value="0" id="target"  readonly />
-		<span style="color: #FFFFFF" >纬度</span><input type="input" style="width:50px;" value="0" id="targetLa"  readonly />
+		<span style="color: #FFFFFF" >实时位置：</span>
+		<span style="color: #FFFFFF" >海拔</span><input type="input" style="width:50px;" value="0" id="height"  readonly /><span style="color: #FFFFFF" >m</span>
+		<span style="color: #FFFFFF" >经度</span><input type="input" style="width:50px;" value="0" id="planelon"  readonly />
+		<span style="color: #FFFFFF" >纬度</span><input type="input" style="width:50px;" value="0" id="planelat"  readonly />
+		<span style="color: #FFFFFF" >飞行里程</span><input type="input" style="width:50px;" value="0" id="distance"  readonly /><span style="color: #FFFFFF" >km</span>
+		<br/>
+		<span style="color: #FFFFFF" >当前目标点</span>
+		<span style="color: #FFFFFF" id="targetName" ></span>
+		<span style="color: #FFFFFF" >海拔</span><input type="input" style="width:50px;" value="0" id="targetHeight"  readonly /><span style="color: #FFFFFF" >m</span>
 		<span style="color: #FFFFFF" >经度</span><input type="input" style="width:50px;" value="0" id="targetLo"  readonly />
-		
-		<span style="color: #FFFFFF" >距离</span><input type="input" style="width:50px;" value="0" id="dis"  readonly />
-		<span style="color: #FFFFFF" >目标朝向</span><input type="input" style="width:50px;" value="0" id="targetR"  readonly />
-		<span style="color: #FFFFFF" >当前朝向</span><input type="input" style="width:50px;" value="0" id="heading"  readonly /><br/>
+		<span style="color: #FFFFFF" >纬度</span><input type="input" style="width:50px;" value="0" id="targetLa"  readonly />
+		<span style="color: #FFFFFF" >距离</span><input type="input" style="width:50px;" value="0" id="dis"  readonly /><span style="color: #FFFFFF" >km</span>
+		<span style="color: #FFFFFF" >方位角</span><input type="input" style="width:50px;" value="0" id="targetR"  readonly />
+		<br/>
 		<input type="button" value="开始" onclick="go()" /> 
-		<input type="button" value="计算航线" onclick="prepareRoute();" />
-		<input type="button" value="转到起点" onclick="moveToStart();" />
-		<input type="button" value="转到终点" onclick="moveToEnd();" />
-		<input type="button" value="启动" onclick="startPlane()" /> 
-		<input type="button" value="停止" onclick="stopPlane()" /><br/>
-		测试功能
+		<input type="button" value="暂停" id="startBtn" onclick="togglePlane()" /> 
+		<input type="button" value="起飞机场" onclick="moveToStart();" />
+		<input type="button" value="降落机场" onclick="moveToEnd();" />
+		<input type="button" value="模拟日照" onclick="global.showSun();" />
+				测试功能
 		<input type="button" value="空域" onclick="global.drawZone();" />
-		<input type="button" value="日照" onclick="global.showSun();" />
 		<input type="button" value="参考航线" onclick="global.drawRoute();" />
-		<input type="button" value="改变尺寸" onclick="$('embed').css('height',$('embed').height()!=200?200:'100%');$('embed').parent().children();" />
 		<br/>
 		<textarea type="input" rows="3" style="width: 45%;" id="inforBox0" ></textarea>
 		<textarea type="input" rows="3" style="width: 45%;" id="inforBox1" ></textarea>
 	</div>
+	
 </body>
+<!-- 三维模拟需要引入的文件 -->
+<%@include file = "/earthview/glb.inc"%>
 <script type="text/javascript">
     // 初始化页面时，地图加载完成将航线在地图显示
 	function createToolbar(map) {
